@@ -53,3 +53,6 @@ build/
 
 # Windows
 Thumbs.db
+
+# Custom: GTFS folder
+rome_static_gtfs/

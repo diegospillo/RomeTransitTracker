@@ -35,6 +35,18 @@ public class GeneralController {
     }
     
     public void visualizzaFermata(String stop_id) {
-    	
+        // 1. Reset dati precedenti
+        Set<MyWaypoint> waypoints = stopController.get_Waypoints();
+        mapController.clearWaypoint(waypoints);
+
+        // 2. Carica le informazioni della fermata
+        stopController.viewStopById(stop_id);
+        waypoints = stopController.get_Waypoints();
+
+        // 3. Aggiorna la mappa con la singola fermata
+        mapController.initStopspoint("", waypoints);
+
+        // 4. Mostra la fermata nella vista laterale
+        stopController.showFermata();
     }
 }

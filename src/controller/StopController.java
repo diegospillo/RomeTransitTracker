@@ -1,27 +1,26 @@
 package controller;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.jxmapviewer.viewer.GeoPosition;
 
-import service.DataRow;
-import service.GTFSManager;
-import service.Stop_Times;
+import service.*;
 import view.MainView;
 import waypoint.MyWaypoint;
 
 public class StopController {
-	private final GTFSManager gtfsManager;
-	private final MainView mainView;
-	private final Set<MyWaypoint> waypoints = new HashSet<>();
+        private final GTFSManager gtfsManager;
+        private final MainView mainView;
+        private final Set<MyWaypoint> waypoints = new HashSet<>();
+        private String stopId;
+        private String stopName;
 	
 	public StopController(MainView mainView){
 		this.gtfsManager = GTFSManager.getInstance();
 		this.mainView = mainView;
 	}
 	
-	public void loadStopWaypoint(String shape_id) {
+    public void loadStopWaypoint(String shape_id) {
         for (Stop_Times item : Stop_Times.getStops_times()) {
             MyWaypoint.PointType point;
             DataRow row = gtfsManager.getStopById(item.getStop_id());
@@ -54,6 +53,46 @@ public class StopController {
             waypoints.add(wayPoint);
         }
         System.out.println("waypoints: " + waypoints.size());
+    }
+
+    public void viewStopById(String stop_id) {
+        this.stopId = stop_id;
+        waypoints.clear();
+        mainView.get_modelFermate().clear();
+        mainView.get_modelOrari().clear();
+
+        DataRow row = gtfsManager.getStopById(stop_id);
+        if (row == null) {
+            return;
+        }
+        this.stopName = row.get("stop_name");
+
+        MyWaypoint wayPoint = new MyWaypoint(0, stopName, MyWaypoint.PointType.STOPS,
+                mainView.get_event(),
+                new GeoPosition(Double.parseDouble(row.get("stop_lat")), Double.parseDouble(row.get("stop_lon"))));
+        waypoints.add(wayPoint);
+
+        List<Stop_Routes> stopRoutes = GTFSReader.filterStop_timesByStop_id(stop_id, gtfsManager);
+        if (stopRoutes != null) {
+            Stop_Routes.SetStopRoutes(stopRoutes);
+            Map<String, List<Stop_Routes>> routes = Stop_Routes.GetStopRoutes();
+            for (Map.Entry<String, List<Stop_Routes>> entry : routes.entrySet()) {
+                String route = entry.getKey();
+                Stop_Routes.setCurrentTimeIndex(route);
+                Integer idx = Stop_Routes.getCurrentTimeIndex(route);
+                if (idx != null) {
+                    Stop_Routes sr = entry.getValue().get(idx);
+                    mainView.get_modelOrari().addElement(route + " " + sr.getTrip_headsign() + " " + sr.getArrival_time());
+                }
+            }
+        }
+    }
+
+    public void showFermata() {
+        mainView.get_lblLinea().setText(stopName + " (" + stopId + ")");
+        mainView.get_btnInvertiDirezione().setVisible(false);
+        mainView.get_btnIndietro().setVisible(false);
+        mainView.get_scrollPanel().setViewportView(mainView.get_orariList());
     }
 	
 	public Set<MyWaypoint> get_Waypoints() {

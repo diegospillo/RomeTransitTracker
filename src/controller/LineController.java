@@ -42,27 +42,16 @@ public class LineController{
     }
 	
 	public void showLinea(){
-		mainView.get_lblLinea().setText(nome_linea + " (" + route_id + ")");
+		mainView.get_lblLinea().setText(nome_linea);
+		mainView.get_lblDettagli().setText("Linea " + route_id);
+		mainView.get_lblDescription().setText("");
 		mainView.get_btnInvertiDirezione().setVisible(true);
 		mainView.get_btnIndietro().setVisible(false);
+		mainView.get_btnMoreInfo().setVisible(false);
+		mainView.get_btnCloseSidePanel().setVisible(true);
+		mainView.get_lblDettagli().setVisible(true);
 		mainView.get_scrollPanel().setViewportView(mainView.get_fermateList());
-    }
-	
-	public void showOrariFermata(){
-        int index = mainView.get_fermateList().getSelectedIndex();
-        List<Map<String, String>> times = Stop_Times.GetTimesByIndex(index);
-        mainView.get_modelOrari().clear();
-        assert times != null;
-        for (Map<String, String> ora : times){
-        	mainView.get_modelOrari().addElement(route_id + " " + nome_linea + " " + ora.get("arr"));
-        }
-        mainView.get_orariList().setModel(mainView.get_modelOrari());
-
-        String nome_fermata = Stop_Times.GetNameByIndex(index);
-        mainView.get_lblLinea().setText(nome_fermata);
-        mainView.get_btnInvertiDirezione().setVisible(false);
-        mainView.get_btnIndietro().setVisible(true);
-        mainView.get_scrollPanel().setViewportView(mainView.get_orariList());
+		mainView.adjustSidePanelWidth();
     }
 	
 	public boolean get_direction() {
@@ -75,6 +64,10 @@ public class LineController{
 	
 	public String get_shape_id() {
 		return shape_id;
+	}
+	
+	public String get_nome_linea() {
+		return nome_linea;
 	}
 	
 }

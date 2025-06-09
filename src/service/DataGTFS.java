@@ -16,4 +16,8 @@ public record DataGTFS(List<DataRow> dataList) {
     public int size() {
         return this.dataList.size();
     }
+    
+    public void clear() {
+    	this.dataList.clear();
+    }
 }

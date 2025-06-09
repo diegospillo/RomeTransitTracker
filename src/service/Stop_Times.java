@@ -29,6 +29,10 @@ public class Stop_Times {
     public static String GetNameByIndex(int index) {
         return stops_times.get(index).stop_name;
     }
+    
+    public static String GetStopIdByIndex(int index) {
+        return stops_times.get(index).stop_id;
+    }
 
     public void SetStop_name(String stop_name) {
         this.stop_name = stop_name;

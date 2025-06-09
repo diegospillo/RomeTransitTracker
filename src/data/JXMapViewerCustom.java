@@ -19,6 +19,13 @@ public class JXMapViewerCustom extends JXMapViewer {
         this.routingData = routingData;
         repaint();
     }
+    
+    public void clearRoutingData() {
+    	if(this.routingData!=null) {
+    		this.routingData.clear();
+    		repaint();
+    	}
+    }
 
     private DataGTFS routingData;
 

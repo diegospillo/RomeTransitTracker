@@ -5,7 +5,6 @@ import controller.MapController;
 import controller.UIEventController;
 import controller.LineController;
 import controller.StopController;
-import controller.UIEventController;
 import controller.GeneralController;
 import service.GTFSManager;
 import view.MainView;
@@ -32,7 +31,7 @@ public class AppLauncher {
             StopController stopController = new StopController(mainView);
             GeneralController generalController = new GeneralController(lineController, stopController,mapController);
             UIEventController uiEventController = new UIEventController(mainView, lineController, stopController,mapController,generalController);
-            generalController.visualizzaLinea("492", true);
+            uiEventController.CloseSidePanel();
          
             mainView.setVisible(true);
         });

@@ -22,7 +22,7 @@ public class MapController {
 		this.gtfsManager = GTFSManager.getInstance();
 	}
 	
-	public void initStopspoint(String shapes_id,Set<MyWaypoint> waypoints) {
+	public void initWaypoint(String shapes_id,Set<MyWaypoint> waypoints) {
         System.out.println("initStopspoint");
         WaypointPainter<MyWaypoint> wp = new WaypointRender();
         wp.setWaypoints(waypoints);
@@ -41,6 +41,7 @@ public class MapController {
             jXMapViewer.remove(d.getButton());
         }
         mainView.get_modelFermate().removeAllElements();
+        jXMapViewer.clearRoutingData();
         waypoints.clear();
     }
 }

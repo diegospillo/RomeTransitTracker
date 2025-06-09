@@ -1,0 +1,2 @@
+route_id,service_id,trip_id,trip_headsign,shape_id
+60,WD,60_0,Termini,shape_60

@@ -31,8 +31,8 @@ public class AppLauncher {
             StopController stopController = new StopController(mainView);
             GeneralController generalController = new GeneralController(lineController, stopController,mapController);
             UIEventController uiEventController = new UIEventController(mainView, lineController, stopController,mapController,generalController);
+            
             uiEventController.CloseSidePanel();
-         
             mainView.setVisible(true);
         });
     }

@@ -133,4 +133,37 @@ public class StopController {
 	public String get_stopId() {
 		return stopId;
 	}
+	
+	public List<String> getAllStops(){
+        Set<String> uniqueStops = new HashSet<>();
+        for (DataRow row : gtfsManager.getStops().dataList()) {
+                String name = row.get("stop_name");
+                String my_stop_id = row.get("stop_id");
+                String item = "(" + my_stop_id + ") " + name;
+                if(my_stop_id != null){
+                	uniqueStops.add(item);
+                }
+        }
+        List<String> sortedStops = new ArrayList<>(uniqueStops);
+        Collections.sort(sortedStops);
+        return sortedStops;
+	}
+	
+	public List<String> getStopsOf(String text){
+		//if(text.length()>0){
+			Set<String> uniqueStops = new HashSet<>();
+	        for (DataRow row : gtfsManager.getStops().dataList()) {
+	                String name = row.get("stop_name");
+	                String my_stop_id = row.get("stop_id");
+	                String item = "(" + my_stop_id + ") " + name;
+	                if(my_stop_id != null && item.toLowerCase().contains(text.toLowerCase())){
+	                	uniqueStops.add(item);
+	                }
+	        }
+	        List<String> sortedStops = new ArrayList<>(uniqueStops);
+	        Collections.sort(sortedStops);
+	        return sortedStops;
+		//}
+		//return getAllStops();
+	}
 }

@@ -12,7 +12,6 @@ import java.awt.*;
 
 public class MainView extends JFrame {
 	private final JTextField textInput = new JTextField(16);
-    private final JButton searchButton = new JButton("Cerca");
     private final MapView mapView = new MapView();
     private final JComboBox<String> comboMapType = new JComboBox<>();
     private final JComboBox<String> comboSearchControl = new JComboBox<>();
@@ -33,6 +32,9 @@ public class MainView extends JFrame {
     private JList<String> fermateList;
     private JList<String> orariList;
     private JList<String> lineeList;
+    private DefaultListModel<String> modelSearch;
+    private JList<String> searchList;
+    private JScrollPane searchScroll;
     private JPanel sidePanel;
     private ImageIcon leftIcon;
     private ImageIcon rightIcon;
@@ -56,10 +58,8 @@ public class MainView extends JFrame {
         JPanel searchPanel = new JPanel();
         searchPanel.setOpaque(false);
         textInput.setFont(new Font("SansSerif", Font.PLAIN, 18));
-        searchButton.setBackground(new Color(255, 255, 255));
         searchPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         searchPanel.add(textInput);
-        searchPanel.add(searchButton);
         topBar.add(searchPanel, BorderLayout.CENTER);
 
         comboMapType.setModel(new DefaultComboBoxModel<>(new String[] { "Open Street", "Virtual Earth", "Hybrid", "Satellite" }));
@@ -89,6 +89,15 @@ public class MainView extends JFrame {
         lineeList.setFont(new Font("SansSerif", Font.PLAIN, 14));
         lineeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lineeList.setCellRenderer(new FermataRenderer());
+        
+        modelSearch = new DefaultListModel<>();
+        searchList = new JList<>(modelSearch);
+        searchList.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        searchList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        searchList.setCellRenderer(new DefaultListCellRenderer());
+        searchScroll = new JScrollPane(searchList);
+        searchScroll.setPreferredSize(new Dimension(200, 150));
+        topBar.add(searchScroll, BorderLayout.SOUTH);
 
         scrollPanel = new JScrollPane(fermateList);
         scrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -302,14 +311,15 @@ public class MainView extends JFrame {
     	return comboSearchControl;
     }
 
+    public JTextField get_TextInput() {
+    	return textInput;
+    }
     public String getSearchText() {
         return textInput.getText();
     }
-
-    public JButton getSearchButton() {
-        return searchButton;
+    public void setSearchText(String text) {
+        textInput.setText(text);
     }
-    
     public DefaultListModel<String> get_modelFermate(){
     	return modelFermate;
     }
@@ -318,6 +328,9 @@ public class MainView extends JFrame {
     }
     public DefaultListModel<String> get_modelLinee(){
     	return modelLinee;
+    }
+    public DefaultListModel<String> get_modelSearch(){
+        return modelSearch;
     }
     public void set_event(EventWaypoint event) {
     	this.event = event;
@@ -361,6 +374,9 @@ public class MainView extends JFrame {
     }
     public JList<String> get_lineeList(){
     	return lineeList;
+    }
+    public JList<String> get_searchList(){
+        return searchList;
     }
     public JPanel get_sidePanel() {
     	return sidePanel;

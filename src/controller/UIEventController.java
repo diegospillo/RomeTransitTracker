@@ -2,7 +2,16 @@ package controller;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import view.MainView;
 import waypoint.EventWaypoint;
@@ -14,6 +23,8 @@ public class UIEventController {
     private final StopController stopController;
     private final MapController mapController;
     private final GeneralController generalController;
+    Timer timer = new Timer();
+    final int DELAY = 300; // ms di attesa dopo l'ultima digitazione
 
     public UIEventController(MainView mainView,
                              LineController lineController,
@@ -26,15 +37,10 @@ public class UIEventController {
         this.mapController = mapController;
         this.generalController = generalController;
         setupEventHandlers();
+        updateSearchList("");
     }
-    
+   
     private void setupEventHandlers() {
-       
-        mainView.getSearchButton().addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                SearchActionPerformed(evt);
-            }
-        });
 
         // Aggiungere un listener per il doppio click su una fermata
         mainView.get_fermateList().addMouseListener(new MouseAdapter() {
@@ -82,6 +88,54 @@ public class UIEventController {
             }
         });
         
+        mainView.get_searchList().addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    String value = mainView.get_searchList().getSelectedValue();
+                    if (value != null) {
+                        mainView.setSearchText(value);
+                        SearchActionPerformed();
+                    }
+                }
+            }
+        });
+        
+        mainView.get_TextInput().getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                aggiorna();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                aggiorna();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                // Questo metodo viene usato per cambiamenti di stile, di solito non serve per JTextField semplice
+            }
+
+            // Usa un debounce
+            private void aggiorna() {
+                // Cancella eventuali task pendenti
+                timer.cancel();
+                timer = new Timer();
+
+                // Fissa un nuovo task che parte dopo il delay
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        // Essendo su un thread non EDT, aggiorno la GUI in modo thread-safe
+                        SwingUtilities.invokeLater(() -> {
+                            String text = mainView.getSearchText();
+                            updateSearchList(text);
+                        });
+                    }
+                }, DELAY);
+            }
+        });
+        
         mainView.set_event(getEvent());
     }
     
@@ -103,15 +157,20 @@ public class UIEventController {
         };
     }
     
-    private void SearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdAddActionPerformed
+    private void SearchActionPerformed() {//GEN-FIRST:event_cmdAddActionPerformed
     	String text = mainView.getSearchText(); 
     	int value = generalController.getStateControl();
-    	if(value ==0) {
-	        generalController.visualizzaLinea(text, true);
+    	if(value == 0) {
+    		String route_id = extractId(text);
+	        generalController.visualizzaLinea(route_id, true);
     	}
-    	else if (value ==1) {
-    		generalController.visualizzaFermata(text);
+    	else if (value == 1) {
+    		String stop_id = extractId(text);
+    		generalController.visualizzaFermata(stop_id);
     	}
+    	mainView.get_modelSearch().clear();
+        mainView.setSearchText("");
+        updateSearchList("");
     	mainView.get_toggleSidePanelBtn().setVisible(true);
         mainView.get_sidePanel().setVisible(true);
         mainView.get_toggleSidePanelBtn().setIcon(mainView.get_leftIcon());
@@ -142,6 +201,34 @@ public class UIEventController {
         	generalController.setStateControl(selected);
         } else if (selected == 1) {
         	generalController.setStateControl(selected);
+        }
+        mainView.get_modelSearch().clear();
+        mainView.setSearchText("");
+        updateSearchList("");
+    }
+    
+    private void updateSearchList(String text) {
+        mainView.get_modelSearch().clear();
+        int selected = mainView.get_comboSearchControl().getSelectedIndex();
+        List<String> values;
+        if (selected == 0) {
+        		values = lineController.getLinesOf(text);
+        } else {
+        		values = stopController.getStopsOf(text);
+        }
+        for (String v : values) {
+            mainView.get_modelSearch().addElement(v);
+        }
+    }
+    
+    public static String extractId(String itemString) {
+        Pattern pattern = Pattern.compile("\\(([^)]+)\\)");
+        Matcher matcher = pattern.matcher(itemString);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return "";
         }
     }
 

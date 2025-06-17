@@ -8,6 +8,8 @@ import org.jxmapviewer.VirtualEarthTileFactoryInfo;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.TileFactoryInfo;
 import waypoint.EventWaypoint;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.*;
 
 public class MainView extends JFrame {
@@ -58,6 +60,24 @@ public class MainView extends JFrame {
         JPanel searchPanel = new JPanel();
         searchPanel.setOpaque(false);
         textInput.setFont(new Font("SansSerif", Font.PLAIN, 18));
+     // Aggiungi un FocusListener per gestire il placeholder
+        textInput.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (textInput.getText().equals("Cerca...")) {
+                	textInput.setText("");
+                	textInput.setForeground(Color.BLACK);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (textInput.getText().isEmpty()) {
+                	textInput.setText("Cerca...");
+                	textInput.setForeground(Color.GRAY);
+                }
+            }
+        });
         searchPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         searchPanel.add(textInput);
         topBar.add(searchPanel, BorderLayout.CENTER);
@@ -104,6 +124,8 @@ public class MainView extends JFrame {
 
         sidePanel = new JPanel(new BorderLayout());
         sidePanel.setBackground(Color.WHITE);
+        
+        
 
         JPanel TopPanel = new JPanel(new BorderLayout());
         TopPanel.setBackground(new Color(163, 0, 0));
@@ -365,6 +387,9 @@ public class MainView extends JFrame {
     }
     public JScrollPane get_scrollPanel() {
     	return scrollPanel;
+    }
+    public JScrollPane get_searchScroll() {
+    	return searchScroll;
     }
     public JList<String> get_fermateList(){
     	return fermateList;

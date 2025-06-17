@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.*;
 
 public class GTFSReader {
+	
+	// Mappa di cache per evitare il ricaricamento ripetuto del file stop_times
+    private static final Map<String, List<Stop_Routes>> stopRoutesCache = new HashMap<>();
 
     public static DataGTFS readFile(String folder,String filename) {
         DataGTFS dataList = new DataGTFS(new ArrayList<>());
@@ -82,6 +85,10 @@ public class GTFSReader {
     }
 
     public static List<Stop_Routes> filterStop_timesByStop_id(String stopIdMap, GTFSManager gtfsManager) {
+    	// Controlla la cache prima di effettuare la lettura del file
+        if (stopRoutesCache.containsKey(stopIdMap)) {
+            return stopRoutesCache.get(stopIdMap);
+        }
         try (BufferedReader br = new BufferedReader(new FileReader("rome_static_gtfs/stop_times.txt"))) {
             String headerLine = br.readLine(); // Legge la prima riga (nomi delle colonne)
             if (headerLine == null) return null;
@@ -93,7 +100,6 @@ public class GTFSReader {
                 String arrival_time = values[StopTimesHeader.arrival_time.getIndex()];
                 String departure_time = values[StopTimesHeader.departure_time.getIndex()];
                 String stop_id = values[StopTimesHeader.stop_id.getIndex()];
-
                 if (stopIdMap.equals(stop_id)) {
                     Map<String,String> trip = gtfsManager.GetTripToRoute(trip_id);
                     Map<String,String> routeInfo = gtfsManager.GetRouteInfo();
@@ -104,6 +110,8 @@ public class GTFSReader {
                 }
 
             }
+            // Memorizza i risultati nella cache per future richieste
+            stopRoutesCache.put(stopIdMap, dataSet);
             return dataSet;
         } catch (IOException e) {
             System.err.println("Errore nella lettura del file: " + e.getMessage());

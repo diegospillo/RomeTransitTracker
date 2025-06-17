@@ -5,9 +5,15 @@ import controller.MapController;
 import controller.UIEventController;
 import controller.LineController;
 import controller.StopController;
+import controller.BusController;
 import controller.GeneralController;
 import service.GTFSManager;
 import view.MainView;
+import waypoint.MyWaypoint;
+
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.*;
 
@@ -24,14 +30,14 @@ import javax.swing.*;
 public class AppLauncher {
     public static void launchApp(String[] args) {
         SwingUtilities.invokeLater(() -> {
-        	GTFSManager.getInstance().loadData("rome_static_gtfs");
+        	GTFSManager.getInstance().loadData("rome_static_gtfs","20250617");
             MainView mainView = new MainView();
             MapController mapController = new MapController(mainView);
             LineController lineController = new LineController(mainView);
             StopController stopController = new StopController(mainView);
-            GeneralController generalController = new GeneralController(lineController, stopController,mapController);
-            UIEventController uiEventController = new UIEventController(mainView, lineController, stopController,mapController,generalController);
-            
+            BusController busController = new BusController(mainView);
+            GeneralController generalController = new GeneralController(lineController, stopController, busController, mapController);
+            UIEventController uiEventController = new UIEventController(mainView, lineController, stopController, busController, mapController, generalController);
             uiEventController.CloseSidePanel();
             mainView.setVisible(true);
         });

@@ -22,13 +22,12 @@ public class MapController {
 		this.gtfsManager = GTFSManager.getInstance();
 	}
 	
-	public void initWaypoint(String shapes_id,Set<MyWaypoint> waypoints) {
-        System.out.println("initStopspoint");
-        WaypointPainter<MyWaypoint> wp = new WaypointRender();
-        wp.setWaypoints(waypoints);
-        jXMapViewer.setOverlayPainter(wp);
+	public void initStopsWaypoint(String shapes_id,Set<MyWaypoint> waypoints) {
+        System.out.println("initStopsWaypoint");
+        jXMapViewer.setStopPainter(waypoints);
         for (MyWaypoint d : waypoints) {
             jXMapViewer.add(d.getButton());
+            jXMapViewer.setComponentZOrder(d.getButton(), 1);
         }
 
         DataGTFS routingData = RoutingService.routing(gtfsManager.getShapes(),shapes_id);
@@ -36,12 +35,29 @@ public class MapController {
         jXMapViewer.setRoutingData(routingData);
     }
 	
-	public void clearWaypoint(Set<MyWaypoint> waypoints) {
+	public void initBusWaypoint(Set<MyWaypoint> waypoints) {
+        System.out.println("initBusWaypoint");
+        jXMapViewer.setBusPainter(waypoints);
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.add(d.getButton());
+            jXMapViewer.setComponentZOrder(d.getButton(), 0);
+        }
+    }
+	
+	public void clearStopsWaypoint(Set<MyWaypoint> waypoints) {
         for (MyWaypoint d : waypoints) {
             jXMapViewer.remove(d.getButton());
         }
-        mainView.get_modelFermate().removeAllElements();
+        mainView.get_modelFermate().clear();
+        mainView.get_modelLinee().clear();
         jXMapViewer.clearRoutingData();
+        waypoints.clear();
+    }
+	
+	public void clearBusWaypoint(Set<MyWaypoint> waypoints) {
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.remove(d.getButton());
+        }
         waypoints.clear();
     }
 }

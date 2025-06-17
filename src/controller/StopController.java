@@ -1,6 +1,7 @@
 package controller;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.jxmapviewer.viewer.GeoPosition;
 
@@ -18,11 +19,28 @@ public class StopController {
      private final Set<MyWaypoint> waypoints = new HashSet<>();
      private String stopId;
      private String stopName;
+     private final List<String> allStops;
 	
-	public StopController(MainView mainView){
-		this.gtfsManager = GTFSManager.getInstance();
-		this.mainView = mainView;
-	}
+     public StopController(MainView mainView){
+         this.gtfsManager = GTFSManager.getInstance();
+         this.mainView = mainView;
+         this.allStops = buildAllStops();
+     }
+
+     private List<String> buildAllStops(){
+         Set<String> uniqueStops = new HashSet<>();
+         for (DataRow row : gtfsManager.getStops().dataList()) {
+                 String name = row.get("stop_name");
+                 String my_stop_id = row.get("stop_id");
+                 String item = "(" + my_stop_id + ") " + name;
+                 if(my_stop_id != null){
+                         uniqueStops.add(item);
+                 }
+         }
+         List<String> sortedStops = new ArrayList<>(uniqueStops);
+         Collections.sort(sortedStops);
+         return sortedStops;
+     }
 	
 	public void loadStopWaypoint(String shape_id) {
         for (Stop_Times item : Stop_Times.getStops_times()) {
@@ -61,9 +79,6 @@ public class StopController {
 	
 	public void viewStopById(String stop_id) {
         this.stopId = stop_id;
-        waypoints.clear();
-        //mainView.get_modelFermate().clear();
-        //mainView.get_modelOrari().clear();
 
         DataRow row = gtfsManager.getStopById(stop_id);
         if (row == null) {
@@ -102,6 +117,7 @@ public class StopController {
         mainView.get_btnCloseSidePanel().setVisible(true);
         mainView.get_lblDettagli().setVisible(true);
         mainView.get_scrollPanel().setViewportView(mainView.get_lineeList());
+        mainView.adjustSidePanelWidth();
     }
     
     public void showOrariFermata(String route_id,String nome_linea){
@@ -133,37 +149,17 @@ public class StopController {
 	public String get_stopId() {
 		return stopId;
 	}
-	
+
 	public List<String> getAllStops(){
-        Set<String> uniqueStops = new HashSet<>();
-        for (DataRow row : gtfsManager.getStops().dataList()) {
-                String name = row.get("stop_name");
-                String my_stop_id = row.get("stop_id");
-                String item = "(" + my_stop_id + ") " + name;
-                if(my_stop_id != null){
-                	uniqueStops.add(item);
-                }
-        }
-        List<String> sortedStops = new ArrayList<>(uniqueStops);
-        Collections.sort(sortedStops);
-        return sortedStops;
+		System.out.println("getAllStops");
+        return allStops;
 	}
 	
 	public List<String> getStopsOf(String text){
-		//if(text.length()>0){
-			Set<String> uniqueStops = new HashSet<>();
-	        for (DataRow row : gtfsManager.getStops().dataList()) {
-	                String name = row.get("stop_name");
-	                String my_stop_id = row.get("stop_id");
-	                String item = "(" + my_stop_id + ") " + name;
-	                if(my_stop_id != null && item.toLowerCase().contains(text.toLowerCase())){
-	                	uniqueStops.add(item);
-	                }
-	        }
-	        List<String> sortedStops = new ArrayList<>(uniqueStops);
-	        Collections.sort(sortedStops);
-	        return sortedStops;
-		//}
-		//return getAllStops();
+		System.out.println("getStopsOf");
+        final String lowered = text.toLowerCase();
+        return allStops.stream()
+                .filter(item -> item.toLowerCase().contains(lowered))
+                .collect(Collectors.toList());
 	}
 }

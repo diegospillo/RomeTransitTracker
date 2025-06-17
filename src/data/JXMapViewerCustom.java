@@ -1,16 +1,53 @@
 package data;
 
+import org.jxmapviewer.painter.CompoundPainter;
+import org.jxmapviewer.painter.Painter;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.GeoPosition;
+import org.jxmapviewer.viewer.WaypointPainter;
 
 import service.DataGTFS;
 import service.DataRow;
+import waypoint.MyWaypoint;
+import waypoint.WaypointRender;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
+import java.util.*;
+
 public class JXMapViewerCustom extends JXMapViewer {
 
+	private WaypointPainter<MyWaypoint> stopPainter;
+    private WaypointPainter<MyWaypoint> busPainter;
+    
+    public void setStopPainter(Set<MyWaypoint> stopWaypoints) {
+        stopPainter = new WaypointRender();
+        stopPainter.setWaypoints(stopWaypoints);
+        updatePainters();
+    }
+
+    public void setBusPainter(Set<MyWaypoint> busWaypoints) {
+        if (busPainter == null) {
+            busPainter = new WaypointRender();
+        }
+        busPainter.setWaypoints(busWaypoints);
+        updatePainters();
+    }
+
+    private void updatePainters() {
+        List<Painter<JXMapViewer>> painters = new ArrayList<>();
+        if (stopPainter != null) painters.add(stopPainter);
+        if (busPainter != null) painters.add(busPainter);
+        CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(painters);
+        this.setOverlayPainter(compoundPainter);
+        repaint();
+    }
+    
     public DataGTFS getRoutingData() {
         return routingData;
     }

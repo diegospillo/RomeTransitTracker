@@ -3,6 +3,7 @@ package service;
 import java.util.*;
 
 public class GTFSManager {
+	private String CURRENT_DATE;
     private DataGTFS agency;
     private DataGTFS calendar;
     private DataGTFS calendarDates;
@@ -16,7 +17,8 @@ public class GTFSManager {
     private Map<String, Map<String,String>> tripToRoute;
     private Map<String, String> routeInfo;
     
-    public void loadData(String folder) {
+    public void loadData(String folder,String current_date) {
+    	this.CURRENT_DATE = current_date;
     	DataGTFS[] dataGtfs = new DataGTFS[8];
         String[] gtfsNames = {"agency", "calendar", "calendar_dates", "routes", "shapes","stop_times", "stops", "trips"};
         for (int i = 0; i < gtfsNames.length; i++) {
@@ -51,10 +53,10 @@ public class GTFSManager {
         return new LinkedHashSet<>(values);
     }
 
-    public Set<String> getFilterService_idByDate(DataGTFS dataGtfs, String date) {
+    public Set<String> getFilterService_idByDate(DataGTFS dataGtfs) {
         List<String> values = new ArrayList<>();
         for (DataRow row : dataGtfs.dataList()) {
-            if (date.equals(row.get("date"))){
+            if (CURRENT_DATE.equals(row.get("date"))){
                 values.add(row.get("service_id"));
             }
         }
@@ -91,7 +93,7 @@ public class GTFSManager {
     }
 
     private void SetTripToRoute(){
-        Set<String> service_id = getFilterService_idByDate(getCalendarDates(),"20250504");
+        Set<String> service_id = getFilterService_idByDate(getCalendarDates());
         tripToRoute = new HashMap<>();
         for (DataRow row : trips.dataList()) {
             if(service_id.contains(row.get("service_id"))) {

@@ -65,6 +65,9 @@ public class MyWaypoint extends DefaultWaypoint {
                 break;
             case STOPS:
                 button = new ButtonWaypoint("/icon/stop.png",16);
+                break;
+            case BUS:
+                button = new ButtonWaypoint("/icon/bus.png",24);
 
         }
         button.setContentAreaFilled(false);
@@ -81,6 +84,6 @@ public class MyWaypoint extends DefaultWaypoint {
     }
 
     public static enum PointType {
-        START, END, STOPS
+        START, END, STOPS, BUS
     }
 }

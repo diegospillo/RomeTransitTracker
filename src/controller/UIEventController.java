@@ -1,5 +1,6 @@
 package controller;
 
+import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -21,6 +22,7 @@ public class UIEventController {
     private final MainView mainView;
     private final LineController lineController;
     private final StopController stopController;
+    private final BusController busController;
     private final MapController mapController;
     private final GeneralController generalController;
     Timer timer = new Timer();
@@ -29,11 +31,13 @@ public class UIEventController {
     public UIEventController(MainView mainView,
                              LineController lineController,
                              StopController stopController,
+                             BusController busController,
                              MapController mapController,
                              GeneralController generalController) {
         this.mainView = mainView;
         this.lineController = lineController;
         this.stopController = stopController;
+        this.busController = busController;
         this.mapController = mapController;
         this.generalController = generalController;
         setupEventHandlers();
@@ -118,19 +122,14 @@ public class UIEventController {
 
             // Usa un debounce
             private void aggiorna() {
-                // Cancella eventuali task pendenti
                 timer.cancel();
                 timer = new Timer();
-
-                // Fissa un nuovo task che parte dopo il delay
+                
+                final String text = mainView.getSearchText();
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
-                        // Essendo su un thread non EDT, aggiorno la GUI in modo thread-safe
-                        SwingUtilities.invokeLater(() -> {
-                            String text = mainView.getSearchText();
-                            updateSearchList(text);
-                        });
+                    	updateSearchList(text);
                     }
                 }, DELAY);
             }
@@ -140,8 +139,7 @@ public class UIEventController {
     }
     
     public void CloseSidePanel() {
-    	Set<MyWaypoint> waypoints = stopController.get_Waypoints();
-    	mapController.clearWaypoint(waypoints);
+    	generalController.Close();
     	controlSidePanel();
     	mainView.get_toggleSidePanelBtn().setVisible(false);
     }
@@ -150,9 +148,11 @@ public class UIEventController {
         return new EventWaypoint() {
             @Override
             public void selected(MyWaypoint waypoint) {
-            	int index = waypoint.getIndex();	
-        		mainView.get_fermateList().setSelectedIndex(index);
+            	int index = waypoint.getIndex();
+            	if (stopController.get_Waypoints().size() > 1) {
+            		mainView.get_fermateList().setSelectedIndex(index);
         		stopController.showOrariFermata(lineController.get_route_id(),lineController.get_nome_linea());
+            	}
             }
         };
     }
@@ -168,7 +168,7 @@ public class UIEventController {
     		String stop_id = extractId(text);
     		generalController.visualizzaFermata(stop_id);
     	}
-    	mainView.get_modelSearch().clear();
+    	//mainView.get_modelSearch().clear();
         mainView.setSearchText("");
         updateSearchList("");
     	mainView.get_toggleSidePanelBtn().setVisible(true);
@@ -183,7 +183,6 @@ public class UIEventController {
     
     private void selectMoreInfo(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdAddActionPerformed
         String stopId = stopController.get_stopId();
-        System.out.println(stopId);
         generalController.visualizzaFermata(stopId);
     }
     
@@ -197,28 +196,50 @@ public class UIEventController {
     
     private void comboSearchControlActionPerformed(java.awt.event.ActionEvent evt) {
         int selected = mainView.get_comboSearchControl().getSelectedIndex();
-        if (selected == 0) {
-        	generalController.setStateControl(selected);
-        } else if (selected == 1) {
-        	generalController.setStateControl(selected);
-        }
+        generalController.setStateControl(selected);
+       
         mainView.get_modelSearch().clear();
         mainView.setSearchText("");
         updateSearchList("");
     }
     
     private void updateSearchList(String text) {
-        mainView.get_modelSearch().clear();
-        int selected = mainView.get_comboSearchControl().getSelectedIndex();
-        List<String> values;
-        if (selected == 0) {
-        		values = lineController.getLinesOf(text);
-        } else {
-        		values = stopController.getStopsOf(text);
-        }
-        for (String v : values) {
-            mainView.get_modelSearch().addElement(v);
-        }
+    	SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<String> doInBackground() {
+                int selected = mainView.get_comboSearchControl().getSelectedIndex();
+                if (!text.isEmpty()) {
+                	mainView.get_searchScroll().setVisible(true);
+                	mainView.revalidate();
+                    mainView.repaint();
+	                if (selected == 0) {
+	                    return lineController.getLinesOf(text);
+	                } else {
+	                    return stopController.getStopsOf(text);
+	                }
+                }
+                else {
+                	mainView.get_searchScroll().setVisible(false);
+                	mainView.revalidate();
+                    mainView.repaint();
+                	return List.of();
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<String> values = get();
+                    mainView.get_modelSearch().clear();
+                    for (String v : values) {
+                        mainView.get_modelSearch().addElement(v);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
     }
     
     public static String extractId(String itemString) {

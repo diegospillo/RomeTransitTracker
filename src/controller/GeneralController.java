@@ -6,6 +6,7 @@ import waypoint.MyWaypoint;
 
 public class GeneralController {
 	private int StateControl = 0;
+	private final int DELAY = 5000;
 	private javax.swing.Timer busTimer;
     private final LineController lineController;
     private final StopController stopController;
@@ -32,17 +33,13 @@ public class GeneralController {
 
         // 3. Carica fermate per shape e aggiorna overlay
         stopController.loadStopWaypoint(shapeId);
-        Set<MyWaypoint> waypoints = stopController.get_Waypoints();
-        
-        // 4. Carica bus TO DO
-        busController.set_Route_id(lineController.get_route_id());
-        
+        Set<MyWaypoint> waypoints = stopController.get_Waypoints();      
         mapController.initStopsWaypoint(shapeId, waypoints);
 
-        // 5. Mostra linea sulla mappa
+        // 4. Mostra linea sulla mappa
         lineController.showLinea();
         
-        // 6. Init bus
+        // 5. Init bus
         initBusUpdates();
     }
     
@@ -83,13 +80,15 @@ public class GeneralController {
         }
 
         // Crea un nuovo Timer che gira ogni 5 secondi
-        busTimer = new javax.swing.Timer(5000, e -> {
+        busTimer = new javax.swing.Timer(DELAY, e -> {
             // Rimuovi i vecchi waypoint
             Set<MyWaypoint> oldWaypoints = busController.get_Waypoints();
             mapController.clearBusWaypoint(oldWaypoints);
 
             // Aggiorna i dati dei bus
-            busController.updateBusPositions();
+            String route_id = lineController.get_route_id();
+        	boolean direction = lineController.get_direction();
+            busController.updateBusPositions(route_id,direction);
 
             // Aggiungi i nuovi waypoint
             Set<MyWaypoint> newWaypoints = busController.get_Waypoints();

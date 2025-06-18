@@ -25,8 +25,8 @@ public class UIEventController {
     private final BusController busController;
     private final MapController mapController;
     private final GeneralController generalController;
-    Timer timer = new Timer();
-    final int DELAY = 300; // ms di attesa dopo l'ultima digitazione
+    private Timer timer = new Timer();
+    private final int DELAY = 300; // ms di attesa dopo l'ultima digitazione
 
     public UIEventController(MainView mainView,
                              LineController lineController,

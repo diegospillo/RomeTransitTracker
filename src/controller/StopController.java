@@ -51,7 +51,6 @@ public class StopController {
             if(item.getStop_sequence().equals("1") && item.getTimepoint().equals("1")) {
                 //point = MyWaypoint.PointType.START;
                 point = MyWaypoint.PointType.STOPS;
-                item.setCurrentTimeIndex();
             }
             else if(item.getTimepoint().equals("1")) {
                 //point = MyWaypoint.PointType.END;
@@ -60,6 +59,7 @@ public class StopController {
             else {
                 point = MyWaypoint.PointType.STOPS;
             }
+            item.setCurrentTimeIndex();
             String current_time = item.getCurrentTime();
             System.out.println(item.getStop_sequence() + " " + item.getStop_name() + " => " + current_time);
             String fermata = current_time + " ";

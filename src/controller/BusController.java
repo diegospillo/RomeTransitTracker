@@ -13,14 +13,13 @@ import java.util.Set;
 public class BusController{
 	private final MainView mainView;
 	private final Set<MyWaypoint> waypoints = new HashSet<>();
-	private String route_id;
 
     public BusController(MainView mainView) {
     	this.mainView = mainView;
     }
     
-    public void updateBusPositions() {
-        List<GeoPosition> busPositions = GTFSFetcher.fetchBusPositions(route_id);
+    public void updateBusPositions(String route_id,boolean direction) {
+        List<GeoPosition> busPositions = GTFSFetcher.fetchBusPositions(route_id,direction);
         loadBusWaypoint(busPositions);
     }
 
@@ -30,10 +29,6 @@ public class BusController{
         	MyWaypoint wayPoint = new MyWaypoint(positions.indexOf(pos),"bus", MyWaypoint.PointType.BUS, mainView.get_event(), new GeoPosition(pos.getLatitude(), pos.getLongitude()));
         	waypoints.add(wayPoint);
         }
-    }
-    
-    public void set_Route_id(String route_id) {
-    	this.route_id = route_id;
     }
     
     public Set<MyWaypoint> get_Waypoints() {

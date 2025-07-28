@@ -28,6 +28,7 @@ public class MainView extends JFrame {
     private JButton btnInvertiDirezione;
     private JButton btnIndietro;
     private JButton btnMoreInfo;
+    private JButton btnAddFavorite;
     private JButton btnCloseSidePanel;
     private JButton toggleSidePanelBtn;
     private JScrollPane scrollPanel;
@@ -163,6 +164,7 @@ public class MainView extends JFrame {
         Image resizedImg3 = img3.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon3 = new ImageIcon(resizedImg3);
         btnMoreInfo = new JButton(scaledIcon3);
+        btnAddFavorite = new JButton("Fav");
         
         lblDettagli = new JLabel("", SwingConstants.CENTER);
         lblDettagli.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -173,7 +175,13 @@ public class MainView extends JFrame {
         backPanel.add(btnCloseSidePanel,BorderLayout.CENTER);
         backPanel.add(btnIndietro,BorderLayout.WEST);
         
-        TopPanel.add(btnMoreInfo, BorderLayout.EAST);
+        //TopPanel.add(btnMoreInfo, BorderLayout.EAST);
+        JPanel eastPanel = new JPanel();
+        eastPanel.setOpaque(false);
+        eastPanel.add(btnMoreInfo);
+        eastPanel.add(btnAddFavorite);
+        TopPanel.add(eastPanel, BorderLayout.EAST);
+        
         descriptionPanel.add(lblDescription, BorderLayout.WEST);
         descriptionPanel.add(btnInvertiDirezione, BorderLayout.EAST);
         InfoPanel.add(lblDettagli,BorderLayout.CENTER);
@@ -378,6 +386,9 @@ public class MainView extends JFrame {
     }
     public JButton get_btnMoreInfo() {
     	return btnMoreInfo;
+    }
+    public JButton get_btnAddFavorite() {
+        return btnAddFavorite;
     }
     public JButton get_btnCloseSidePanel() {
     	return btnCloseSidePanel;

@@ -32,7 +32,7 @@ public class GeneralController {
         String shapeId = lineController.get_shape_id();
 
         // 3. Carica fermate per shape e aggiorna overlay
-        stopController.loadStopWaypoint(shapeId);
+        stopController.loadStopWaypoint(-1);
         Set<MyWaypoint> waypoints = stopController.get_Waypoints();      
         mapController.initStopsWaypoint(shapeId, waypoints);
 
@@ -41,6 +41,19 @@ public class GeneralController {
         
         // 5. Init bus
         initBusUpdates();
+    }
+    
+    public void visualizzaLineaByFermata() {
+    	// 1. Reset dati precedenti
+    	clearAllWaypoints();
+    	// 2. Carica orari fermate per index
+    	stopController.showOrariFermateByIndex();
+    	String shapeId = lineController.get_shape_id();
+    	// 3. Carica fermate per index e aggiorna overlay
+    	Set<MyWaypoint> waypoints = stopController.get_Waypoints();      
+        mapController.initStopsWaypoint(shapeId, waypoints);
+    	// 4. Mostra linea sulla mappa
+		lineController.showLinea();
     }
     
     public void visualizzaFermata(String stop_id) {
@@ -61,7 +74,7 @@ public class GeneralController {
         stopBusUpdates();
     }
     
-    private void clearAllWaypoints() {
+    public void clearAllWaypoints() {
     	Set<MyWaypoint> stopswaypoints = stopController.get_Waypoints();
     	mapController.clearStopsWaypoint(stopswaypoints);
     	Set<MyWaypoint> buswaypoints = busController.get_Waypoints();

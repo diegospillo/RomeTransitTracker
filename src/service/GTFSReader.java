@@ -61,7 +61,7 @@ public class GTFSReader {
                 String[] values = line.split(",");
                     if (trips_id.contains(values[StopTimesHeader.trip_id.getIndex()]) && !stops.contains(values[StopTimesHeader.stop_id.getIndex()])) {
                         Stop_Times stop_times = new Stop_Times(values);
-                        stop_times.SetTimes(values[StopTimesHeader.arrival_time.getIndex()], values[StopTimesHeader.departure_time.getIndex()]);
+                        stop_times.SetTimes(values[StopTimesHeader.trip_id.getIndex()],values[StopTimesHeader.arrival_time.getIndex()], values[StopTimesHeader.departure_time.getIndex()]);
                         stops.add(values[StopTimesHeader.stop_id.getIndex()]);
                         dataSet.add(stop_times);
                     }
@@ -74,7 +74,7 @@ public class GTFSReader {
                             }
                         }
                         assert result != null;
-                        result.SetTimes(values[StopTimesHeader.arrival_time.getIndex()], values[StopTimesHeader.departure_time.getIndex()]);
+                        result.SetTimes(values[StopTimesHeader.trip_id.getIndex()],values[StopTimesHeader.arrival_time.getIndex()], values[StopTimesHeader.departure_time.getIndex()]);
                     }
             }
             return dataSet;

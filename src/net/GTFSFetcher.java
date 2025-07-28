@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Set;
 
 public class GTFSFetcher {
-    private static final String GTFS_RT_URL = "https://romamobilita.it/sites/default/files/rome_rtgtfs_vehicle_positions_feed.pb";
+    private static final String GTFS_RT_URL = "https://romamobilita.it/sites/default/files";
 
     public static List<GeoPosition> fetchBusPositions(String route_id,boolean direction) {
         List<GeoPosition> positions = new ArrayList<>();
         Integer dir_int = direction ? 0 : 1;
-        try (InputStream inputStream = new URL(GTFS_RT_URL).openStream()) {
+        try (InputStream inputStream = new URL(GTFS_RT_URL+"/rome_rtgtfs_vehicle_positions_feed.pb").openStream()) {
             GtfsRealtime.FeedMessage feed = GtfsRealtime.FeedMessage.parseFrom(inputStream);
 
             for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
@@ -33,6 +33,25 @@ public class GTFSFetcher {
             e.printStackTrace();
         }
 
+        return positions;
+    }
+    
+    public static List<GeoPosition> fetchTripUpdates(String route_id,boolean direction) {
+        List<GeoPosition> positions = new ArrayList<>();
+        Integer dir_int = direction ? 0 : 1;
+        try (InputStream inputStream = new URL(GTFS_RT_URL+"/rome_rtgtfs_trip_updates_feed.pb").openStream()) {
+            GtfsRealtime.FeedMessage feed = GtfsRealtime.FeedMessage.parseFrom(inputStream);
+
+            for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
+                if (entity.hasTripUpdate()) {
+                    GtfsRealtime.TripUpdate trip = entity.getTripUpdate();
+                    System.out.println(trip.toString());
+                    System.out.println("---------");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return positions;
     }
 }

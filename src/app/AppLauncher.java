@@ -9,11 +9,7 @@ import controller.BusController;
 import controller.GeneralController;
 import service.GTFSManager;
 import view.MainView;
-import waypoint.MyWaypoint;
-
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import net.GTFSFetcher;
 
 import javax.swing.*;
 
@@ -30,7 +26,7 @@ import javax.swing.*;
 public class AppLauncher {
     public static void launchApp(String[] args) {
         SwingUtilities.invokeLater(() -> {
-        	GTFSManager.getInstance().loadData("rome_static_gtfs","20250617");
+        	GTFSManager.getInstance().loadData("rome_static_gtfs","20250728");
             MainView mainView = new MainView();
             MapController mapController = new MapController(mainView);
             LineController lineController = new LineController(mainView);
@@ -38,6 +34,7 @@ public class AppLauncher {
             BusController busController = new BusController(mainView);
             GeneralController generalController = new GeneralController(lineController, stopController, busController, mapController);
             UIEventController uiEventController = new UIEventController(mainView, lineController, stopController, busController, mapController, generalController);
+            //GTFSFetcher.fetchTripUpdates(null, false);
             uiEventController.CloseSidePanel();
             mainView.setVisible(true);
         });

@@ -3,6 +3,7 @@ package controller;
 import org.jxmapviewer.viewer.GeoPosition;
 
 import net.GTFSFetcher;
+import net.ConnectivityUtil;
 import view.MainView;
 import waypoint.MyWaypoint;
 
@@ -19,6 +20,10 @@ public class BusController{
     }
     
     public void updateBusPositions(String route_id,boolean direction) {
+    	if (!ConnectivityUtil.isOnline()) {
+            waypoints.clear();
+            return;
+        }
         List<GeoPosition> busPositions = GTFSFetcher.fetchBusPositions(route_id,direction);
         loadBusWaypoint(busPositions);
     }

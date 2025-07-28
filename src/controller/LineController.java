@@ -65,10 +65,12 @@ public class LineController{
         DataGTFS tripsFilter = gtfsManager.getFilterTripsByRoute_id(gtfsManager.getTrips(), routes_id, direction, service_id);
         nome_linea = tripsFilter.dataList().getFirst().get("trip_headsign").replace("\"","");
         List<String> shapesId = gtfsManager.getShapesId(tripsFilter);
+        System.out.println(shapesId);
         this.shape_id = shapesId.getFirst();
         Set<String> trips_id = gtfsManager.getFilterTripsByShape_id(tripsFilter,shape_id);
-        //System.out.print(trips_id);
+        //System.out.println(trips_id);
         Stop_Times.setStops_times(GTFSReader.filterStop_timesByTrips_id(trips_id));
+        System.out.println(Stop_Times.getStops_times());
     }
 	
 	public void showLinea(){

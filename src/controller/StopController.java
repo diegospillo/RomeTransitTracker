@@ -42,7 +42,8 @@ public class StopController {
          return sortedStops;
      }
 	
-	public void loadStopWaypoint(String shape_id) {
+	public void loadStopWaypoint(int index) {
+		waypoints.clear();
         for (Stop_Times item : Stop_Times.getStops_times()) {
             MyWaypoint.PointType point;
             DataRow row = gtfsManager.getStopById(item.getStop_id());
@@ -59,7 +60,7 @@ public class StopController {
             else {
                 point = MyWaypoint.PointType.STOPS;
             }
-            item.setCurrentTimeIndex();
+        	item.setCurrentTimeIndex(index);
             String current_time = item.getCurrentTime();
             System.out.println(item.getStop_sequence() + " " + item.getStop_name() + " => " + current_time);
             String fermata = current_time + " ";
@@ -118,6 +119,14 @@ public class StopController {
         mainView.get_lblDettagli().setVisible(true);
         mainView.get_scrollPanel().setViewportView(mainView.get_lineeList());
         mainView.adjustSidePanelWidth();
+    }
+    
+    public void showOrariFermateByIndex() {
+    	
+    	int index = mainView.get_orariList().getSelectedIndex();
+    	mainView.get_modelFermate().clear();
+    	mainView.get_modelOrari().clear();
+    	loadStopWaypoint(index);
     }
     
     public void showOrariFermata(String route_id,String nome_linea){

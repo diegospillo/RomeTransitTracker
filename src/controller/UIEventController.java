@@ -10,10 +10,12 @@ import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import service.FavoritesManager;
 import view.MainView;
 import waypoint.EventWaypoint;
 import waypoint.MyWaypoint;
@@ -25,6 +27,8 @@ public class UIEventController {
     private final BusController busController;
     private final MapController mapController;
     private final GeneralController generalController;
+    private final FavoritesManager favoritesManager = FavoritesManager.getInstance();
+    
     private Timer timer = new Timer();
     private final int DELAY = 300; // ms di attesa dopo l'ultima digitazione
 
@@ -49,8 +53,26 @@ public class UIEventController {
         // Aggiungere un listener per il doppio click su una fermata
         mainView.get_fermateList().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {// Doppio click
+            	if (e.getClickCount() == 2) {// Doppio click
                 	stopController.showOrariFermata(lineController.get_route_id(),lineController.get_nome_linea());
+                }
+            }
+        });
+        
+        mainView.get_orariList().addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+            	if (e.getClickCount() == 2) {// Doppio click
+            		generalController.visualizzaLineaByFermata();
+                }
+            }
+        });
+        
+        mainView.get_lineeList().addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+            	if (e.getClickCount() == 2) {// Doppio click
+            		String selctedValue = mainView.get_lineeList().getSelectedValue();
+            		String[] selctedValueSplitted = selctedValue.split(" ");
+            		generalController.visualizzaLinea(selctedValueSplitted[0],true);
                 }
             }
         });
@@ -71,6 +93,12 @@ public class UIEventController {
         mainView.get_btnMoreInfo().addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	selectMoreInfo(evt);
+            }
+        });
+        
+        mainView.get_btnAddFavorite().addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addFavorite();
             }
         });
         
@@ -186,6 +214,18 @@ public class UIEventController {
         generalController.visualizzaFermata(stopId);
     }
     
+    private void addFavorite() {
+        String stopId = stopController.get_stopId();
+        String lineId = lineController.get_route_id();
+        if (stopId != null) {
+            favoritesManager.addStop(stopId);
+        }
+        if (lineId != null) {
+            favoritesManager.addLine(lineId);
+        }
+        JOptionPane.showMessageDialog(mainView, "Aggiunto ai preferiti");
+    }
+    
     private void controlSidePanel() {
     	boolean visible = mainView.get_sidePanel().isVisible();
         mainView.get_sidePanel().setVisible(!visible);
@@ -208,7 +248,13 @@ public class UIEventController {
             @Override
             protected List<String> doInBackground() {
                 int selected = mainView.get_comboSearchControl().getSelectedIndex();
-                if (!text.isEmpty()) {
+                if(text.equals("Cerca...")){
+                	mainView.get_searchScroll().setVisible(false);
+                	mainView.revalidate();
+                    mainView.repaint();
+                	return List.of();
+                }
+                else if(!text.isEmpty()) {
                 	mainView.get_searchScroll().setVisible(true);
                 	mainView.revalidate();
                     mainView.repaint();
@@ -218,7 +264,7 @@ public class UIEventController {
 	                    return stopController.getStopsOf(text);
 	                }
                 }
-                else {
+                else{
                 	mainView.get_searchScroll().setVisible(false);
                 	mainView.revalidate();
                     mainView.repaint();

@@ -38,10 +38,12 @@ public class Stop_Times {
         this.stop_name = stop_name;
     }
 
-    public void SetTimes(String arrival_time, String departure_time){
+    public void SetTimes(String trip_id, String arrival_time, String departure_time){
         Map<String,String> map = new HashMap<>();
+        map.put("trip_id", trip_id);
         map.put("arr", OrarioUtil.format_times(arrival_time));
         map.put("dep", OrarioUtil.format_times(departure_time));
+        //System.out.println(map);
         times.add(map);
     }
 
@@ -73,10 +75,23 @@ public class Stop_Times {
         stops_times = args;
     }
 
-    public void setCurrentTimeIndex() {
-        current_time_index = OrarioUtil.trovaIndexOrarioPiuVicino(times);
+    public void setCurrentTimeIndex(int index) {
+    	if(index!=-1) {
+    		current_time_index = index;
+    	}
+    	else {
+    		 current_time_index = OrarioUtil.trovaIndexOrarioPiuVicino(times);
+    	}
     }
 
+    /*public void setTimeIndex(String trip_id) {
+    	for(Map<String,String> map : times) {
+    		if(map.get("trip_id")==trip_id) {
+    			current_time_index = times.indexOf(map);
+    		}
+    	}
+    }*/
+    
     public String getCurrentTime(){
         if(current_time_index < times.size()){
             return times.get(current_time_index).get("arr");

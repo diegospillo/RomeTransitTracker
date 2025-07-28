@@ -13,6 +13,7 @@ public class OrarioUtil {
     }
 
     public static int trovaIndexOrarioPiuVicino(List<Map<String, String>> listaOrari) {
+
         LocalTime orarioCorrente = LocalTime.now();
         long differenzaMinima = Long.MAX_VALUE;
         int indice = 0;
@@ -30,6 +31,29 @@ public class OrarioUtil {
                     indice = listaOrari.indexOf(mappa);
                 }
             }
+        }
+
+        return indice;
+    }
+    
+    public static int trovaIndexOrarioPiuVicino(String trip_id,List<Map<String, String>> listaOrari) {
+
+        LocalTime orarioCorrente = LocalTime.now();
+        long differenzaMinima = Long.MAX_VALUE;
+        int indice = 0;
+        for (Map<String, String> mappa : listaOrari) {
+	            String orarioStr = mappa.get("arr");
+	            if (orarioStr == null) continue;
+	
+	            LocalTime orario = LocalTime.parse(orarioStr);
+	
+	            if (!orario.isBefore(orarioCorrente)) { // solo orari >= now
+	                long differenza = Duration.between(orarioCorrente, orario).toSeconds();
+	                if (differenza < differenzaMinima && trip_id.equals(mappa.get("trip_id"))) {
+	                    differenzaMinima = differenza;
+	                    indice = listaOrari.indexOf(mappa);
+	                }
+	            }
         }
 
         return indice;

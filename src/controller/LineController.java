@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import model.ModelManager;
 import model.Trip;
 import service.DataRow;
+import service.FavoritesManager;
 import service.GTFSManager;
 import view.MainView;
 
@@ -21,6 +22,7 @@ public class LineController{
     private boolean direction = true;
     private final List<String> allLines;
     private boolean selectedTrip = false;
+    private boolean isFavorite = false;
 	
 	
     public LineController(MainView mainView){
@@ -67,6 +69,7 @@ public class LineController{
         this.shape_id = shapesId.getFirst();
         System.out.println(shape_id);
         this.trips = ModelManager.getTripsByShapeId(preTrips, shape_id);
+        this.isFavorite = FavoritesManager.getInstance().getFavoriteLines().contains(routeId);
     }
 	
 	public void viewRouteTrip(String tripId) {
@@ -84,6 +87,9 @@ public class LineController{
 		else {
 			mainView.get_lblDettagli().setText("Linea: " + route_id + "  TripID: " + trips.keySet().toArray()[0]);
 		}
+
+		mainView.get_btnAddFavorite().setVisible(!this.isFavorite);
+		mainView.get_btnDeleteFavorite().setVisible(this.isFavorite);
 		mainView.get_lblLinea().setText(nome_linea);
 		mainView.get_lblDescription().setText("");
 		mainView.get_btnInvertiDirezione().setVisible(true);
@@ -94,6 +100,10 @@ public class LineController{
 		mainView.get_lblDettagli().setVisible(true);
 		mainView.get_scrollPanel().setViewportView(mainView.get_fermateList());
 		mainView.adjustSidePanelWidth();
+    }
+	
+	public void setIsFavorite(boolean isFavorite) {
+    	this.isFavorite = isFavorite;
     }
 	
 	public boolean get_direction() {

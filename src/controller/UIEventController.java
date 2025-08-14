@@ -104,6 +104,12 @@ public class UIEventController {
             }
         });
         
+        mainView.get_btnDeleteFavorite().addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteFavorite();
+            }
+        });
+        
         mainView.get_btnCloseSidePanel().addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	CloseSidePanel();
@@ -230,11 +236,30 @@ public class UIEventController {
         String lineId = lineController.get_route_id();
         if (stopId != null) {
             favoritesManager.addStop(stopId);
+            stopController.setIsFavorite(true);
+            stopController.showFermata();
         }
         if (lineId != null) {
             favoritesManager.addLine(lineId);
+            lineController.setIsFavorite(true);
+            lineController.showLinea(lineController.getSelectedTrip());
         }
         JOptionPane.showMessageDialog(mainView, "Aggiunto ai preferiti");
+    }
+    
+    private void deleteFavorite() {
+        String stopId = stopController.get_stopId();
+        String lineId = lineController.get_route_id();
+        if (stopId != null) {
+            favoritesManager.removeStop(stopId);
+            stopController.setIsFavorite(false);
+            stopController.showFermata();
+        }
+        if (lineId != null) {
+            favoritesManager.removeLine(lineId);
+            lineController.setIsFavorite(false);
+            lineController.showLinea(lineController.getSelectedTrip());
+        }
     }
     
     private void controlSidePanel() {

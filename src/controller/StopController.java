@@ -10,6 +10,7 @@ import model.Stop;
 import model.StopTime;
 import model.Trip;
 import service.DataRow;
+import service.FavoritesManager;
 import service.GTFSManager;
 import view.MainView;
 import waypoint.MyWaypoint;
@@ -34,6 +35,7 @@ public class StopController {
      private List<String> stopsIdByTrips = new ArrayList<>();
      private List<String> localStopsIdByTrips = new ArrayList<>();
      private boolean selectedTrip = false;
+     private boolean isFavorite = false;
      private static Map<String, StopTime> stopTimesByTrips = new LinkedHashMap<>();
 	
      public StopController(MainView mainView){
@@ -100,6 +102,7 @@ public class StopController {
         Stop stop = modelManager.getStops().get(stop_id);
         this.stopId = stop.getStopId();
         this.stopName = stop.getName();
+        this.isFavorite = FavoritesManager.getInstance().getFavoriteStops().contains(stop_id);
 
         MyWaypoint wayPoint = new MyWaypoint(0, stopName, MyWaypoint.PointType.STOPS,mainView.get_event(),new GeoPosition(stop.getLat(),stop.getLon()));
         localWaypoints.add(wayPoint);
@@ -141,6 +144,8 @@ public class StopController {
 	}
 
     public void showFermata() {
+    	mainView.get_btnAddFavorite().setVisible(!this.isFavorite);
+		mainView.get_btnDeleteFavorite().setVisible(this.isFavorite);
         mainView.get_lblLinea().setText(stopName);
         mainView.get_lblDettagli().setText("Fermata " + stopId);
         mainView.get_lblDescription().setText("Prossimi arrivi");
@@ -161,10 +166,16 @@ public class StopController {
         mainView.get_btnInvertiDirezione().setVisible(false);
         mainView.get_btnLive().setVisible(false);
         mainView.get_btnIndietro().setVisible(true);
+        mainView.get_btnAddFavorite().setVisible(false);
+        mainView.get_btnDeleteFavorite().setVisible(false);
         mainView.get_btnMoreInfo().setVisible(true);
         mainView.get_btnCloseSidePanel().setVisible(false);
         mainView.get_lblDettagli().setVisible(false);
         mainView.get_scrollPanel().setViewportView(mainView.get_orariList());
+    }
+    
+    public void setIsFavorite(boolean isFavorite) {
+    	this.isFavorite = isFavorite;
     }
     
     public void setTrips(Map<String,Trip> trips) {

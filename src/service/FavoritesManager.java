@@ -37,6 +37,26 @@ public class FavoritesManager {
         }
     }
 
+    /** Remove a line from favourites (if present) and persist to file. */
+    public void removeLine(String lineId) {
+        if (lineId != null && !lineId.isEmpty()) {
+            boolean changed = favoriteLines.remove(lineId);
+            if (changed) {
+                saveFavorites();
+            }
+        }
+    }
+
+    /** Remove a stop from favourites (if present) and persist to file. */
+    public void removeStop(String stopId) {
+        if (stopId != null && !stopId.isEmpty()) {
+            boolean changed = favoriteStops.remove(stopId);
+            if (changed) {
+                saveFavorites();
+            }
+        }
+    }
+
     public Set<String> getFavoriteLines() {
         return new LinkedHashSet<>(favoriteLines);
     }

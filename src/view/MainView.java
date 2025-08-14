@@ -32,6 +32,7 @@ public class MainView extends JFrame {
     private JButton btnIndietro;
     private JButton btnMoreInfo;
     private JButton btnAddFavorite;
+    private JButton btnDeleteFavorite;
     private JButton btnCloseSidePanel;
     private JButton toggleSidePanelBtn;
     private JScrollPane scrollPanel;
@@ -152,8 +153,19 @@ public class MainView extends JFrame {
 
         JPanel descriptionPanel = new JPanel();
         descriptionPanel.setOpaque(false);
-        btnInvertiDirezione = new JButton("Inverti Direzione");
-        btnLive = new JButton("Live");
+        
+        ImageIcon swapeIcon = new ImageIcon(getClass().getResource("/icon/swape.png"));
+        Image img4 = swapeIcon.getImage();
+        Image resizedImg4 = img4.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon4 = new ImageIcon(resizedImg4);
+        btnInvertiDirezione = new JButton(scaledIcon4);
+        
+        ImageIcon liveIcon = new ImageIcon(getClass().getResource("/icon/live.png"));
+        Image img5 = liveIcon.getImage();
+        Image resizedImg5 = img5.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon5 = new ImageIcon(resizedImg5);
+        btnLive = new JButton(scaledIcon5);
+        
         ImageIcon indietroIcon = new ImageIcon(getClass().getResource("/icon/turn-back.png"));
         Image img = indietroIcon.getImage();
         Image resizedImg = img.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
@@ -171,7 +183,18 @@ public class MainView extends JFrame {
         Image resizedImg3 = img3.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon3 = new ImageIcon(resizedImg3);
         btnMoreInfo = new JButton(scaledIcon3);
-        btnAddFavorite = new JButton("Fav");
+        
+        ImageIcon favIcon = new ImageIcon(getClass().getResource("/icon/fav.png"));
+        Image img6 = favIcon.getImage();
+        Image resizedImg6 = img6.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon6 = new ImageIcon(resizedImg6);
+        btnAddFavorite = new JButton(scaledIcon6);
+        
+        ImageIcon fav_fillIcon = new ImageIcon(getClass().getResource("/icon/fav-fill.png"));
+        Image img7 = fav_fillIcon.getImage();
+        Image resizedImg7 = img7.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon7 = new ImageIcon(resizedImg7);
+        btnDeleteFavorite = new JButton(scaledIcon7);
         
         lblDettagli = new JLabel("", SwingConstants.CENTER);
         lblDettagli.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -187,6 +210,7 @@ public class MainView extends JFrame {
         eastPanel.setOpaque(false);
         eastPanel.add(btnMoreInfo);
         eastPanel.add(btnAddFavorite);
+        eastPanel.add(btnDeleteFavorite);
         TopPanel.add(eastPanel, BorderLayout.EAST);
         
         descriptionPanel.add(lblDescription, BorderLayout.WEST);
@@ -463,6 +487,9 @@ public class MainView extends JFrame {
     public JButton get_btnAddFavorite() {
         return btnAddFavorite;
     }
+    public JButton get_btnDeleteFavorite() {
+        return btnDeleteFavorite;
+    }
     public JButton get_btnCloseSidePanel() {
     	return btnCloseSidePanel;
     }
@@ -489,6 +516,9 @@ public class MainView extends JFrame {
     }
     public JPanel get_sidePanel() {
     	return sidePanel;
+    }
+    public JPanel get_topBar() {
+        return topBar;
     }
     public ImageIcon get_leftIcon() {
     	return leftIcon;

@@ -27,9 +27,10 @@ public class MapController {
         jXMapViewer.setStopPainter(waypoints);
         for (MyWaypoint d : waypoints) {
             jXMapViewer.add(d.getButton());
-            jXMapViewer.setComponentZOrder(d.getButton(), 1);
+            jXMapViewer.setComponentZOrder(d.getButton(), 2);
         }
-
+        jXMapViewer.setComponentZOrder(mainView.get_topBar(), 0);
+        jXMapViewer.setComponentZOrder(mainView.get_sidePanel(), 0);
         DataGTFS routingData = RoutingService.routing(gtfsManager.getShapes(),shapes_id);
 
         jXMapViewer.setRoutingData(routingData);
@@ -40,8 +41,10 @@ public class MapController {
         jXMapViewer.setBusPainter(waypoints);
         for (MyWaypoint d : waypoints) {
             jXMapViewer.add(d.getButton());
-            jXMapViewer.setComponentZOrder(d.getButton(), 0);
+            jXMapViewer.setComponentZOrder(d.getButton(), 1);
         }
+        jXMapViewer.setComponentZOrder(mainView.get_topBar(), 0);
+        jXMapViewer.setComponentZOrder(mainView.get_sidePanel(), 0);
     }
 	
 	public void clearStopsWaypoint(Set<MyWaypoint> waypoints) {

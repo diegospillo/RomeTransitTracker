@@ -54,15 +54,8 @@ public class UIEventController {
         mainView.get_fermateList().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
             	if (e.getClickCount() == 2) {// Doppio click
-                	stopController.showOrariFermata(lineController.get_route_id(),lineController.get_nome_linea());
-                }
-            }
-        });
-        
-        mainView.get_orariList().addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-            	if (e.getClickCount() == 2) {// Doppio click
-            		generalController.visualizzaLineaByFermata();
+            		stopController.viewTimesByStop();
+            		generalController.setStopSelected(true);
                 }
             }
         });
@@ -71,7 +64,7 @@ public class UIEventController {
             public void mouseClicked(MouseEvent e) {
             	if (e.getClickCount() == 2) {// Doppio click
             		String selctedValue = mainView.get_lineeList().getSelectedValue();
-            		String[] selctedValueSplitted = selctedValue.split(" ");
+            		String[] selctedValueSplitted = selctedValue.split("/",2);
             		generalController.visualizzaLinea(selctedValueSplitted[0],true);
                 }
             }
@@ -83,15 +76,24 @@ public class UIEventController {
                 swapeDirection();
             }
         });
+        
+        mainView.get_btnLive().addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                getNextArrivals();
+            }
+        });
 
         mainView.get_btnIndietro().addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	lineController.showLinea();
+            	generalController.setStopSelected(false);
+            	lineController.showLinea(lineController.getSelectedTrip());
             }
         });
         
         mainView.get_btnMoreInfo().addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	generalController.setStopSelected(false);
             	selectMoreInfo(evt);
             }
         });
@@ -177,9 +179,14 @@ public class UIEventController {
             @Override
             public void selected(MyWaypoint waypoint) {
             	int index = waypoint.getIndex();
-            	if (stopController.get_Waypoints().size() > 1) {
+            	if (waypoint.getPointType().equals(MyWaypoint.PointType.BUS)) {
+            		System.out.println(waypoint.getName());
+            		generalController.visualizzaTrip(waypoint.getName());
+            	}
+            	else if (stopController.get_Waypoints().size() > 1) {
             		mainView.get_fermateList().setSelectedIndex(index);
-        		stopController.showOrariFermata(lineController.get_route_id(),lineController.get_nome_linea());
+            		stopController.viewTimesByStop();
+            		generalController.setStopSelected(true);
             	}
             }
         };
@@ -207,6 +214,10 @@ public class UIEventController {
     private void swapeDirection() {
         boolean direzione = !lineController.get_direction();
         generalController.visualizzaLinea(lineController.get_route_id(), direzione);
+    }
+    
+    private void getNextArrivals() {
+    	generalController.visualizzaLinea(lineController.get_route_id(), lineController.get_direction());
     }
     
     private void selectMoreInfo(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdAddActionPerformed

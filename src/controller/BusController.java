@@ -9,6 +9,7 @@ import waypoint.MyWaypoint;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class BusController{
@@ -20,19 +21,25 @@ public class BusController{
     }
     
     public void updateBusPositions(String route_id,boolean direction) {
-    	if (!ConnectivityUtil.isOnline()) {
+    	ConnectivityUtil.checkConnectivityAndSwitchMode();
+    	if (ConnectivityUtil.isOfflineMode()) {
             waypoints.clear();
             return;
         }
-        List<GeoPosition> busPositions = GTFSFetcher.fetchBusPositions(route_id,direction);
+    	System.out.println("updateBusPositions");
+        Map<String,GeoPosition> busPositions = GTFSFetcher.fetchBusPositions(route_id,direction);
         loadBusWaypoint(busPositions);
     }
 
-    private void loadBusWaypoint(List<GeoPosition> positions) {
+    private void loadBusWaypoint(Map<String,GeoPosition> positions) {
     	waypoints.clear();
-        for (GeoPosition pos : positions) {
-        	MyWaypoint wayPoint = new MyWaypoint(positions.indexOf(pos),"bus", MyWaypoint.PointType.BUS, mainView.get_event(), new GeoPosition(pos.getLatitude(), pos.getLongitude()));
+    	int i = 0;
+        for (Map.Entry<String,GeoPosition> entry : positions.entrySet()) {
+        	String tripId = entry.getKey();
+        	GeoPosition pos = entry.getValue();
+        	MyWaypoint wayPoint = new MyWaypoint(i,tripId, MyWaypoint.PointType.BUS, mainView.get_event(), new GeoPosition(pos.getLatitude(), pos.getLongitude()));
         	waypoints.add(wayPoint);
+        	i++;
         }
     }
     

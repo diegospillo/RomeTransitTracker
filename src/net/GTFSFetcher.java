@@ -2,30 +2,41 @@ package net;
 
 import org.jxmapviewer.viewer.GeoPosition;
 import com.google.transit.realtime.GtfsRealtime;
+import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
+
+import model.ModelManager;
+import model.StopTime;
+import model.Trip;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class GTFSFetcher {
-    private static final String GTFS_RT_URL = "https://romamobilita.it/sites/default/files";
+	private static final String BASE_URL = "https://romamobilita.it/sites/default/files";
+	private static final String VEHICLE_POSITIONS = BASE_URL + "/rome_rtgtfs_vehicle_positions_feed.pb";
+	private static final String TRIP_UPDATES = BASE_URL + "/rome_rtgtfs_trip_updates_feed.pb";
+	private static final ModelManager modelManager = ModelManager.getInstance();
 
-    public static List<GeoPosition> fetchBusPositions(String route_id,boolean direction) {
-        List<GeoPosition> positions = new ArrayList<>();
+    public static Map<String,GeoPosition> fetchBusPositions(String route_id,boolean direction) {
+    	Map<String,GeoPosition> positions = new HashMap<>();
         Integer dir_int = direction ? 0 : 1;
-        try (InputStream inputStream = new URL(GTFS_RT_URL+"/rome_rtgtfs_vehicle_positions_feed.pb").openStream()) {
+        try (InputStream inputStream = new URL(VEHICLE_POSITIONS).openStream()) {
             GtfsRealtime.FeedMessage feed = GtfsRealtime.FeedMessage.parseFrom(inputStream);
 
             for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
                 if (entity.hasVehicle()) {
                     GtfsRealtime.VehiclePosition vehicle = entity.getVehicle();
+                    //System.out.println(vehicle.getTrip().getRouteId());
                     if(route_id!=null && route_id.equals(vehicle.getTrip().getRouteId()) && dir_int.equals(vehicle.getTrip().getDirectionId())) {
-                    	//System.out.println(vehicle);
+                    	String tripId = vehicle.getTrip().getTripId();
 	                    double lat = vehicle.getPosition().getLatitude();
 	                    double lon = vehicle.getPosition().getLongitude();
-	                    positions.add(new GeoPosition(lat, lon));
+	                    positions.put(tripId,new GeoPosition(lat, lon));
                     }
                 }
             }
@@ -36,22 +47,33 @@ public class GTFSFetcher {
         return positions;
     }
     
-    public static List<GeoPosition> fetchTripUpdates(String route_id,boolean direction) {
-        List<GeoPosition> positions = new ArrayList<>();
-        Integer dir_int = direction ? 0 : 1;
-        try (InputStream inputStream = new URL(GTFS_RT_URL+"/rome_rtgtfs_trip_updates_feed.pb").openStream()) {
+    public static Map<String, Trip> fetchTripUpdates() {
+        Map<String, Trip> updates = new HashMap<>();
+        try (InputStream inputStream = new URL(TRIP_UPDATES).openStream()) {
             GtfsRealtime.FeedMessage feed = GtfsRealtime.FeedMessage.parseFrom(inputStream);
-
+            Set<String> tripsId = modelManager.getTrips().keySet();
             for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
                 if (entity.hasTripUpdate()) {
-                    GtfsRealtime.TripUpdate trip = entity.getTripUpdate();
-                    System.out.println(trip.toString());
-                    System.out.println("---------");
+                    GtfsRealtime.TripUpdate tripUpdate = entity.getTripUpdate();
+                    String tripId = tripUpdate.getTrip().getTripId();
+                    if(tripsId.contains(tripId)) {
+                    	Trip trip = modelManager.getTrips().get(tripId);
+                    	trip.clearStopTimesRealTime();
+                        for (GtfsRealtime.TripUpdate.StopTimeUpdate stu : tripUpdate.getStopTimeUpdateList()) {
+                            String stopId = stu.getStopId();
+                            int stopSequence = stu.getStopSequence();
+                            long arrivalTime = stu.hasArrival() ? stu.getArrival().getTime() : -1;
+                            int delay = stu.hasArrival() && stu.getArrival().hasDelay() ? stu.getArrival().getDelay() : 0;
+                            trip.addStopTimeRealTime(stopId, arrivalTime, stopSequence, delay);
+                        }
+                        updates.put(tripId, trip);
+                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return positions;
+        return updates;
     }
+
 }

@@ -2,6 +2,8 @@ package service;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,10 @@ public class OrarioUtil {
     public static String getOrarioCorrente() {
         return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
     }
+    public static long getOrarioCorrenteEpochSeconds() {
+        return ZonedDateTime.now(ZoneId.of("Europe/Rome")).toEpochSecond();
+    }
+
 
     public static int trovaIndexOrarioPiuVicino(List<Map<String, String>> listaOrari) {
 

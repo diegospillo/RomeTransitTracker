@@ -3,26 +3,29 @@ package controller;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import service.DataGTFS;
+import model.ModelManager;
+import model.Trip;
 import service.DataRow;
 import service.GTFSManager;
-import service.GTFSReader;
-import service.Stop_Times;
 import view.MainView;
 
 public class LineController{
 	
 	private final GTFSManager gtfsManager;
+	private final ModelManager modelManager;
 	private final MainView mainView;
 	private String route_id;
     private String shape_id;
     private String nome_linea;
+    private Map<String,Trip> trips;
     private boolean direction = true;
     private final List<String> allLines;
+    private boolean selectedTrip = false;
 	
 	
     public LineController(MainView mainView){
         this.gtfsManager = GTFSManager.getInstance();
+        this.modelManager = ModelManager.getInstance();
         this.mainView = mainView;
         this.allLines = buildAllLines();
     }
@@ -53,31 +56,38 @@ public class LineController{
                 .collect(Collectors.toList());
 	}
 	
-	public void viewRouteByName(String routeName, Boolean direction) {
-        this.route_id = routeName;
+	public void viewRouteByName(String routeId, Boolean direction) {
+		
+		System.out.println("viewRouteByName: " + routeId + " direction: " + direction);
+        this.route_id = routeId;
         this.direction = direction;
-
-        System.out.println("viewRouteByName: " + route_id);
-
-        Set<String> routes_id = gtfsManager.getFilterRouteByRouteName(gtfsManager.getRoutes(),routeName);
-        Set<String> service_id = gtfsManager.getFilterService_idByDate(gtfsManager.getCalendarDates());
-
-        DataGTFS tripsFilter = gtfsManager.getFilterTripsByRoute_id(gtfsManager.getTrips(), routes_id, direction, service_id);
-        nome_linea = tripsFilter.dataList().getFirst().get("trip_headsign").replace("\"","");
-        List<String> shapesId = gtfsManager.getShapesId(tripsFilter);
-        System.out.println(shapesId);
+        Map<String,Trip> preTrips = modelManager.getTripsByRouteId(routeId, direction);
+        this.nome_linea = modelManager.getTrips().get(preTrips.keySet().toArray()[0]).getHeadsign();
+        List<String> shapesId = modelManager.getShapeIdsByTrips(preTrips.keySet());
         this.shape_id = shapesId.getFirst();
-        Set<String> trips_id = gtfsManager.getFilterTripsByShape_id(tripsFilter,shape_id);
-        //System.out.println(trips_id);
-        Stop_Times.setStops_times(GTFSReader.filterStop_timesByTrips_id(trips_id));
-        System.out.println(Stop_Times.getStops_times());
+        System.out.println(shape_id);
+        this.trips = ModelManager.getTripsByShapeId(preTrips, shape_id);
     }
 	
-	public void showLinea(){
+	public void viewRouteTrip(String tripId) {
+		Map<String,Trip> curTrips = new HashMap<>();
+		Trip trip = modelManager.getTrips().get(tripId);
+		curTrips.put(tripId, trip);
+		this.trips = new HashMap<>(curTrips);
+	}
+	
+	public void showLinea(boolean isSelectedTrip){
+		this.selectedTrip = isSelectedTrip;
+		if(!isSelectedTrip) {
+			mainView.get_lblDettagli().setText("Linea " + route_id);
+		}
+		else {
+			mainView.get_lblDettagli().setText("Linea: " + route_id + "  TripID: " + trips.keySet().toArray()[0]);
+		}
 		mainView.get_lblLinea().setText(nome_linea);
-		mainView.get_lblDettagli().setText("Linea " + route_id);
 		mainView.get_lblDescription().setText("");
 		mainView.get_btnInvertiDirezione().setVisible(true);
+		mainView.get_btnLive().setVisible(true);
 		mainView.get_btnIndietro().setVisible(false);
 		mainView.get_btnMoreInfo().setVisible(false);
 		mainView.get_btnCloseSidePanel().setVisible(true);
@@ -100,6 +110,13 @@ public class LineController{
 	
 	public String get_nome_linea() {
 		return nome_linea;
+	}
+	
+	public Map<String,Trip> get_trips() {
+		return trips;
+	}
+	public boolean getSelectedTrip() {
+		return selectedTrip;
 	}
 	
 }

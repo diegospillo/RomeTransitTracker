@@ -50,7 +50,6 @@ public class MyWaypoint extends DefaultWaypoint {
     }
 
     private String name;
-    private List<Map<String, String>> times;
     private JButton button;
     private PointType pointType;
     private Integer index;

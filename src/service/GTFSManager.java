@@ -2,8 +2,12 @@ package service;
 
 import java.util.*;
 
+import model.ModelManager;
+
 public class GTFSManager {
+	
 	private String CURRENT_DATE;
+	
     private DataGTFS agency;
     private DataGTFS calendar;
     private DataGTFS calendarDates;
@@ -14,8 +18,6 @@ public class GTFSManager {
     private DataGTFS trips;
 
     private final static GTFSManager gtfsManager = new GTFSManager();
-    private Map<String, Map<String,String>> tripToRoute;
-    private Map<String, String> routeInfo;
     
     public void loadData(String folder,String current_date) {
     	this.CURRENT_DATE = current_date;
@@ -39,29 +41,22 @@ public class GTFSManager {
         this.stopTimes = dataGtfs[5];
         this.stops = dataGtfs[6];
         this.trips = dataGtfs[7];
-        SetTripToRoute();
-        SetRouteInfo();
     }
-
-    public Set<String> getFilterRouteByRouteName(DataGTFS dataGtfs, String routeName) {
+    
+    public Set<String> getFilterService_idByDate() {
         List<String> values = new ArrayList<>();
-        for (DataRow row : dataGtfs.dataList()) {
-                if (routeName.equals(row.get("route_short_name"))){
-                    values.add(row.get("route_id"));
-                }
-        }
-        return new LinkedHashSet<>(values);
-    }
-
-    public Set<String> getFilterService_idByDate(DataGTFS dataGtfs) {
-        List<String> values = new ArrayList<>();
-        for (DataRow row : dataGtfs.dataList()) {
+        for (DataRow row : calendarDates.dataList()) {
             if (CURRENT_DATE.equals(row.get("date"))){
                 values.add(row.get("service_id"));
             }
         }
         return new LinkedHashSet<>(values);
     }
+
+    
+    
+    
+    
 
     public List<String> getShapesId(DataGTFS dataGtfs) {
         List<String> shapesid = new ArrayList<>();
@@ -90,34 +85,6 @@ public class GTFSManager {
             }
         }
         return new LinkedHashSet<>(trips_filtered);
-    }
-
-    private void SetTripToRoute(){
-        Set<String> service_id = getFilterService_idByDate(getCalendarDates());
-        tripToRoute = new HashMap<>();
-        for (DataRow row : trips.dataList()) {
-            if(service_id.contains(row.get("service_id"))) {
-                Map<String,String> trip = new HashMap<>();
-                trip.put("route_id", row.get("route_id"));
-                trip.put("headsign", row.get("trip_headsign"));
-                tripToRoute.put(row.get("trip_id"),trip);
-            }
-        }
-    }
-
-    private void SetRouteInfo(){
-        routeInfo = new HashMap<>();
-        for (DataRow row : routes.dataList()) {
-            routeInfo.put(row.get("route_id"), row.get("route_short_name"));
-        }
-    }
-
-    public Map<String,String> GetTripToRoute(String trip_id) {
-        return tripToRoute.get(trip_id);
-    }
-
-    public Map<String,String> GetRouteInfo() {
-        return routeInfo;
     }
 
 //    public DataGTFS getStopTimesByStopName(String stopName) {
@@ -168,6 +135,22 @@ public class GTFSManager {
         }
         return null;
     }
+    
+    public Map<String, String> getTripById(String tripId) {
+        for (DataRow row : this.trips.dataList()) {
+            if (tripId.equals(row.get("trip_id"))) {
+                Map<String, String> tripInfo = new HashMap<>();
+                tripInfo.put("route_id", row.get("route_id"));
+                tripInfo.put("trip_headsign", row.get("trip_headsign"));
+                tripInfo.put("direction_id", row.get("direction_id"));
+                tripInfo.put("shape_id", row.get("shape_id"));
+                tripInfo.put("service_id", row.get("service_id"));
+                return tripInfo;
+            }
+        }
+        return null; // oppure Collections.emptyMap();
+    }
+
 
     public DataGTFS getAgency() {
         return agency;

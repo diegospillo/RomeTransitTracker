@@ -12,6 +12,9 @@ import org.jxmapviewer.input.ZoomMouseWheelListenerCenter;
 import javax.swing.event.MouseInputListener;
 
 import javax.swing.*;
+import org.jxmapviewer.cache.FileBasedLocalCache;
+import org.jxmapviewer.cache.LocalCache;
+import java.io.File;
 
 public class MapView {
     private final JXMapViewerCustom mapViewer;
@@ -29,6 +32,12 @@ public class MapView {
             }
         };
         DefaultTileFactory tileFactory = new DefaultTileFactory(info);
+        
+        // Imposta la directory della cache
+        File cacheDir = new File("./mapcache");
+        LocalCache localCache = new FileBasedLocalCache(cacheDir, false); // 'false' = no compressione ZIP
+        tileFactory.setLocalCache(localCache);
+        
         mapViewer.setTileFactory(tileFactory);
 
         mapViewer.setZoom(8);

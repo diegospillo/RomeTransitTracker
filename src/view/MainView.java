@@ -2,6 +2,8 @@
 package view;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.VirtualEarthTileFactoryInfo;
@@ -17,7 +19,7 @@ public class MainView extends JFrame {
     private final MapView mapView = new MapView();
     private final JComboBox<String> comboMapType = new JComboBox<>();
     private final JComboBox<String> comboSearchControl = new JComboBox<>();
-
+    
     private DefaultListModel<String> modelFermate;
     private DefaultListModel<String> modelOrari;
     private DefaultListModel<String> modelLinee;
@@ -26,6 +28,7 @@ public class MainView extends JFrame {
     private JLabel lblDescription;
     private JLabel lblDettagli;
     private JButton btnInvertiDirezione;
+    private JButton btnLive;
     private JButton btnIndietro;
     private JButton btnMoreInfo;
     private JButton btnAddFavorite;
@@ -38,6 +41,7 @@ public class MainView extends JFrame {
     private DefaultListModel<String> modelSearch;
     private JList<String> searchList;
     private JScrollPane searchScroll;
+    private JPanel topBar;
     private JPanel sidePanel;
     private ImageIcon leftIcon;
     private ImageIcon rightIcon;
@@ -53,7 +57,7 @@ public class MainView extends JFrame {
         getContentPane().setBackground(new Color(240, 240, 240));
         setLayout(new BorderLayout());
 
-        JPanel topBar = new JPanel(new BorderLayout());
+        topBar = new JPanel(new BorderLayout());
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         topBar.setBackground(new Color(163, 0, 0));
 
@@ -87,12 +91,14 @@ public class MainView extends JFrame {
         topBar.add(comboMapType, BorderLayout.EAST);
 
         comboMapType.addActionListener(this::comboMapTypeActionPerformed);
+        comboMapType.setVisible(false);
         
         comboSearchControl.setModel(new DefaultComboBoxModel<>(new String[] { "Linee", "Fermate" }));
         searchPanel.add(comboSearchControl, BorderLayout.EAST);
 
         //add(topBar, BorderLayout.NORTH);
-
+        
+        
         modelFermate = new DefaultListModel<>();
         fermateList = new JList<>(modelFermate);
         fermateList.setFont(new Font("SansSerif", Font.PLAIN, 14));
@@ -147,6 +153,7 @@ public class MainView extends JFrame {
         JPanel descriptionPanel = new JPanel();
         descriptionPanel.setOpaque(false);
         btnInvertiDirezione = new JButton("Inverti Direzione");
+        btnLive = new JButton("Live");
         ImageIcon indietroIcon = new ImageIcon(getClass().getResource("/icon/turn-back.png"));
         Image img = indietroIcon.getImage();
         Image resizedImg = img.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
@@ -183,6 +190,7 @@ public class MainView extends JFrame {
         TopPanel.add(eastPanel, BorderLayout.EAST);
         
         descriptionPanel.add(lblDescription, BorderLayout.WEST);
+        descriptionPanel.add(btnLive, BorderLayout.WEST);
         descriptionPanel.add(btnInvertiDirezione, BorderLayout.EAST);
         InfoPanel.add(lblDettagli,BorderLayout.CENTER);
         InfoPanel.add(descriptionPanel, BorderLayout.SOUTH);
@@ -281,61 +289,123 @@ public class MainView extends JFrame {
         DefaultTileFactory tileFactory = new DefaultTileFactory(info);
         mapView.getMapViewer().setTileFactory(tileFactory);
     }
-
+    
     private static class FermataRenderer extends JPanel implements ListCellRenderer<String> {
-        private String text;
+        private static final long serialVersionUID = 1L;
+
+        private final JLabel iconLabel = new JLabel();
+        // Lo tengo per compatibilità ma non lo uso per dipingere il testo
+        private final JLabel textLabel = new JLabel();
+
         private boolean isSelected;
-        private boolean hasFocus;
+        private boolean isPassed;
+        private String displayText = ""; // testo senza il marker [LIVE]
+        private Icon liveIcon;
+        private Icon offlineIcon;
+
+        public FermataRenderer() {
+            setLayout(new BorderLayout(8, 0));
+            setBorder(new EmptyBorder(6, 8, 6, 8));
+            setOpaque(true);
+
+            // carica le icone (dimensioni 18x18)
+            liveIcon = loadIcon("/icon/online.png", 18, 18);
+            offlineIcon = loadIcon("/icon/offline.png", 18, 18);
+
+            // icona a sinistra, testo al centro (ma non lo mostriamo: disegniamo noi)
+            add(iconLabel, BorderLayout.WEST);
+            add(textLabel, BorderLayout.CENTER);
+            textLabel.setVisible(false); // evitiamo doppia stampa del testo
+            iconLabel.setVisible(false);
+        }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends String> list, String value, int index, boolean isSelected, boolean cellHasFocus) {
-            this.text = value;
+        public Component getListCellRendererComponent(
+                JList<? extends String> list, String value, int index,
+                boolean isSelected, boolean cellHasFocus) {
+
             this.isSelected = isSelected;
-            this.hasFocus = cellHasFocus;
-            setPreferredSize(new Dimension(Math.max(200, getFontMetrics(getFont()).stringWidth(text) + 40), 40)); // Dinamica in base al testo
+
+            // valuta se LIVE o PASSED
+            boolean isLive = value != null && value.contains("[LIVE]");
+            boolean isPassed = value != null && value.contains("[PASSED]");
+            this.isPassed = isPassed;
+            // testo da visualizzare
+            displayText = (value == null) ? "" : value
+                    .replace("[LIVE]", "")
+                    .replace("[PASSED]", "");
+
+            // set icona
+            iconLabel.setIcon(isLive ? liveIcon : offlineIcon);
+
+            // dimensione preferita (larghezza testo + icona + padding)
+            FontMetrics fm = getFontMetrics(getFont());
+            int textW = fm.stringWidth(displayText);
+            int iconW = (iconLabel.getIcon() != null) ? iconLabel.getIcon().getIconWidth() + 8 : 0;
+            int prefW = Math.max(220, textW + iconW + 60);
+            setPreferredSize(new Dimension(prefW, 40));
+
             return this;
         }
+
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Graphics2D g2 = (Graphics2D) g.create();
+            try {
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Impostazioni di colore per il testo e la selezione
-            if (isSelected) {
-                g2.setColor(new Color(163, 0, 0)); // Blu per la selezione
-            } else {
-                g2.setColor(Color.BLACK); // Nero per il normale
+                int xLinea = 20;
+                int yCentro = getHeight() / 2;
+
+                // linea verticale
+                g2.setColor(Color.GRAY);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawLine(xLinea, 0, xLinea, getHeight());
+                
+                // pallino
+                g2.setColor(isSelected ? new Color(163, 0, 0) : Color.BLACK);
+                g2.fillOval(xLinea - 5, yCentro - 5, 10, 10);
+
+
+                // icona a destra della linea
+                Icon icon = iconLabel.getIcon();
+                if (icon != null) {
+                    int iconX = xLinea + 10; // spostamento a destra
+                    int iconY = yCentro - (icon.getIconHeight() / 2);
+                    icon.paintIcon(this, g2, iconX, iconY);
+                }
+
+                // testo (orario + fermata)
+                String[] parts = displayText.split("/", 2);
+                String orario = parts.length > 0 ? parts[0] : "";
+                String nomeFermata = parts.length > 1 ? parts[1] : "";
+
+                int xTesto = xLinea + 10 + ((icon != null) ? icon.getIconWidth() + 8 : 0);
+
+                g2.setColor(isSelected ? new Color(163, 0, 0) : Color.BLACK);
+                g2.setColor(isPassed ? Color.GRAY : Color.BLACK);
+                g2.setFont(new Font("Arial", Font.BOLD, 14));
+                g2.drawString(orario, xTesto, yCentro + 5);
+
+                g2.setFont(new Font("Arial", Font.PLAIN, 14));
+                int orarioW = g2.getFontMetrics().stringWidth(orario);
+                g2.drawString(nomeFermata, xTesto + orarioW + 10, yCentro + 5);
+            } finally {
+                g2.dispose();
             }
+        }
 
-            int xPallino = 20; // Posizione X del pallino
-            int yCentro = getHeight() / 2; // Posizione verticale centrale
 
-            // Disegna la linea verticale tra le fermate
-            g2.setColor(Color.GRAY);
-            g2.setStroke(new BasicStroke(2));
-            g2.drawLine(xPallino, 0, xPallino, getHeight());
-
-            // Disegna il pallino
-            g2.setColor(isSelected ? new Color(163, 0, 0) : Color.BLACK);
-            g2.fillOval(xPallino - 5, yCentro - 5, 10, 10);
-
-            // Dividi il testo in orario e nome della fermata
-            String[] parts = text.split(" ", 2); // Supponiamo che l'orario e il nome siano separati da uno spazio
-            String orario = parts[0];
-            String nomeFermata = parts.length > 1 ? parts[1] : "";
-
-            // Disegna l'orario in grassetto
-            g2.setColor(isSelected ? new Color(163, 0, 0) : Color.BLACK); // Cambia il colore del testo quando selezionato
-            g2.setFont(new Font("Arial", Font.BOLD, 14));
-            g2.drawString(orario, 40, yCentro + 5);
-
-            // Disegna il nome della fermata in normale
-            g2.setFont(new Font("Arial", Font.PLAIN, 14));
-            g2.drawString(nomeFermata, 40 + g2.getFontMetrics().stringWidth(orario) + 10, yCentro + 5); // Aggiungi uno spazio dopo l'orario
+        private static ImageIcon loadIcon(String path, int w, int h) {
+            java.net.URL url = FermataRenderer.class.getResource(path);
+            if (url == null) return null;
+            Image img = new ImageIcon(url).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            return new ImageIcon(img);
         }
     }
+
 
     public JComboBox<String> get_comboSearchControl() {
     	return comboSearchControl;
@@ -380,6 +450,9 @@ public class MainView extends JFrame {
     
     public JButton get_btnInvertiDirezione() {
     	return btnInvertiDirezione;
+    }
+    public JButton get_btnLive() {
+    	return btnLive;
     }
     public JButton get_btnIndietro() {
     	return btnIndietro;

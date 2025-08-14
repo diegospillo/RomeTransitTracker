@@ -6,9 +6,28 @@ import java.net.URL;
 
 /** Utility to check if network is reachable to decide between online and offline mode. */
 public class ConnectivityUtil {
-    private static final String TEST_URL = "https://romamobilita.it";
+	private static boolean offlineMode = false;
 
-    public static boolean isOnline() {
+    private static final String TEST_URL = "https://romamobilita.it";
+    
+    public static void checkConnectivityAndSwitchMode() {
+        boolean online = ConnectivityUtil.isOnline();
+        if (!online) {
+            if (!offlineMode) {
+                offlineMode = true;
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    javax.swing.JOptionPane.showMessageDialog(null,
+                            "Connessione non disponibile. Passaggio alla modalità offline.",
+                            "Modalità Offline",
+                            javax.swing.JOptionPane.WARNING_MESSAGE);
+                });
+            }
+        } else {
+            offlineMode = false;
+        }
+    }
+
+    private static boolean isOnline() {
         try {
             HttpURLConnection conn = (HttpURLConnection) new URL(TEST_URL).openConnection();
             conn.setConnectTimeout(2000);
@@ -20,4 +39,12 @@ public class ConnectivityUtil {
             return false;
         }
     }
+    
+    public static boolean isOfflineMode() {
+	    return offlineMode;
+	}
+
+	public static void setOfflineMode(boolean stato) {
+	    offlineMode = stato;
+	}
 }

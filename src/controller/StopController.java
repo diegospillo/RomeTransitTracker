@@ -5,24 +5,40 @@ import java.util.stream.Collectors;
 
 import org.jxmapviewer.viewer.GeoPosition;
 
+import model.ModelManager;
+import model.Stop;
+import model.StopTime;
+import model.Trip;
 import service.DataRow;
 import service.GTFSManager;
-import service.GTFSReader;
-import service.Stop_Routes;
-import service.Stop_Times;
 import view.MainView;
 import waypoint.MyWaypoint;
+import net.GTFSFetcher;
 
 public class StopController {
 	 private final GTFSManager gtfsManager;
+	 private final ModelManager modelManager;
      private final MainView mainView;
-     private final Set<MyWaypoint> waypoints = new HashSet<>();
+     private Set<MyWaypoint> waypoints = new HashSet<>();
+     private Set<MyWaypoint> localWaypoints = new HashSet<>();
      private String stopId;
      private String stopName;
+     private Set<String> trips_id;
+     private Map<String,Trip> trips;
      private final List<String> allStops;
+     private Map<String,String> stopsStaticLabel = new LinkedHashMap<>();
+     private Map<String,String> localStopsStaticLabel = new LinkedHashMap<>();
+     private Map<String,String> lineeStaticLabel = new LinkedHashMap<>();
+     private Map<String,String> localLineeStaticLabel = new LinkedHashMap<>();
+     private Map<String,String> timesLabel = new LinkedHashMap<>();
+     private List<String> stopsIdByTrips = new ArrayList<>();
+     private List<String> localStopsIdByTrips = new ArrayList<>();
+     private boolean selectedTrip = false;
+     private static Map<String, StopTime> stopTimesByTrips = new LinkedHashMap<>();
 	
      public StopController(MainView mainView){
          this.gtfsManager = GTFSManager.getInstance();
+         this.modelManager = ModelManager.getInstance();
          this.mainView = mainView;
          this.allStops = buildAllStops();
      }
@@ -42,77 +58,94 @@ public class StopController {
          return sortedStops;
      }
 	
-	public void loadStopWaypoint(int index) {
-		waypoints.clear();
-        for (Stop_Times item : Stop_Times.getStops_times()) {
-            MyWaypoint.PointType point;
-            DataRow row = gtfsManager.getStopById(item.getStop_id());
-            item.SetStop_name(row.get("stop_name"));
-            item.SortTimes();
-            if(item.getStop_sequence().equals("1") && item.getTimepoint().equals("1")) {
-                //point = MyWaypoint.PointType.START;
-                point = MyWaypoint.PointType.STOPS;
-            }
-            else if(item.getTimepoint().equals("1")) {
-                //point = MyWaypoint.PointType.END;
-                point = MyWaypoint.PointType.STOPS;
-            }
-            else {
-                point = MyWaypoint.PointType.STOPS;
-            }
-        	item.setCurrentTimeIndex(index);
-            String current_time = item.getCurrentTime();
-            System.out.println(item.getStop_sequence() + " " + item.getStop_name() + " => " + current_time);
-            String fermata = current_time + " ";
-            //String fermata = "";
-            if(row.get("stop_name").length()>=30){
-                fermata += row.get("stop_name").substring(0,30) + "...";
-            }
-            else {
-                fermata += row.get("stop_name");
-            }
-            mainView.get_modelFermate().addElement(fermata);
-            MyWaypoint wayPoint = new MyWaypoint(mainView.get_modelFermate().indexOf(fermata),row.get("stop_name"), point, mainView.get_event(), new GeoPosition(Double.parseDouble(row.get("stop_lat")), Double.parseDouble(row.get("stop_lon"))));
-            waypoints.add(wayPoint);
-        }
-        System.out.println("waypoints: " + waypoints.size());
+	public void loadStopWaypoint(boolean isSelectedTrip) {
+		localWaypoints.clear();
+		localStopsIdByTrips.clear();
+		localStopsStaticLabel.clear();
+		mainView.get_modelFermate().clear();
+		this.selectedTrip = isSelectedTrip;
+		if(!isSelectedTrip) {
+			stopTimesByTrips = ModelManager.getNextStopTimeForStop(trips);
+		}
+		else {
+			stopTimesByTrips = ModelManager.getStopTimeForTrip(trips);
+		}
+		for (Map.Entry<String, StopTime> entry: stopTimesByTrips.entrySet()) {
+			StopTime stopTime = entry.getValue();
+			Stop stop = modelManager.getStops().get(stopTime.getStopId());
+			String stopName = stop.getName();
+			String stopId = stop.getStopId();
+			double lat = stop.getLat();
+			double lon = stop.getLon();
+			String label = "";
+			if(isSelectedTrip && stopTime.getIsPassed()) {
+				label += "[PASSED]" + stopTime.getLabelLinea(stopName,false);
+			}
+			else {
+				label += stopTime.getLabelLinea(stopName,false);
+			}
+			localStopsIdByTrips.add(stopId);
+			localStopsStaticLabel.put(stopId, label);
+			System.out.println(label + " " + stopTime.getStopSequence());
+			mainView.get_modelFermate().addElement(label);
+			MyWaypoint wayPoint = new MyWaypoint(mainView.get_modelFermate().indexOf(label),stopName, MyWaypoint.PointType.STOPS, mainView.get_event(), new GeoPosition(lat, lon));
+			localWaypoints.add(wayPoint);
+		}
     }
 	
 	public void viewStopById(String stop_id) {
-        this.stopId = stop_id;
+		mainView.get_modelLinee().clear();
+		localWaypoints.clear();
+		localLineeStaticLabel.clear();
+        Stop stop = modelManager.getStops().get(stop_id);
+        this.stopId = stop.getStopId();
+        this.stopName = stop.getName();
 
-        DataRow row = gtfsManager.getStopById(stop_id);
-        if (row == null) {
-            return;
-        }
-        this.stopName = row.get("stop_name");
+        MyWaypoint wayPoint = new MyWaypoint(0, stopName, MyWaypoint.PointType.STOPS,mainView.get_event(),new GeoPosition(stop.getLat(),stop.getLon()));
+        localWaypoints.add(wayPoint);
 
-        MyWaypoint wayPoint = new MyWaypoint(0, stopName, MyWaypoint.PointType.STOPS,
-                mainView.get_event(),
-                new GeoPosition(Double.parseDouble(row.get("stop_lat")), Double.parseDouble(row.get("stop_lon"))));
-        waypoints.add(wayPoint);
-
-        List<Stop_Routes> stopRoutes = GTFSReader.filterStop_timesByStop_id(stop_id, gtfsManager);
-        if (stopRoutes != null) {
-            Stop_Routes.SetStopRoutes(stopRoutes);
-            Map<String, List<Stop_Routes>> routes = Stop_Routes.GetStopRoutes();
-            for (Map.Entry<String, List<Stop_Routes>> entry : routes.entrySet()) {
-                String route = entry.getKey();
-                Stop_Routes.setCurrentTimeIndex(route);
-                Integer idx = Stop_Routes.getCurrentTimeIndex(route);
-                if (idx != null) {
-                    Stop_Routes sr = entry.getValue().get(idx);
-                    mainView.get_modelLinee().addElement(route + " " + sr.getTrip_headsign() + " " + sr.getArrival_time());
-                }
-            }
-        }
+        Map<String, StopTime> stopTimes = modelManager.getStopTimesRouteByStopId(stop_id);
+        
+        for (Map.Entry<String, StopTime> entry: stopTimes.entrySet()) {
+			StopTime stopTime = entry.getValue();
+			String routeId = entry.getKey();
+			String tripId = stopTime.getTripId();
+            Trip trip = modelManager.getTrips().get(tripId);
+			String headsign = trip.getHeadsign();
+			String label = stopTime.getLabelFermata(routeId, headsign, false);
+			localLineeStaticLabel.put(routeId, label);
+			System.out.println(label);
+			mainView.get_modelLinee().addElement(label);
+		}
     }
+	
+	public void viewTimesByStop(){
+		mainView.get_modelOrari().clear();
+		timesLabel.clear();
+        int index = mainView.get_fermateList().getSelectedIndex();
+        String stopIdSelected = stopsIdByTrips.get(index);
+        Stop stop = modelManager.getStops().get(stopIdSelected);
+		String stopName = stop.getName();
+		this.stopId = stop.getStopId();
+		
+        List<StopTime> stopTimes = ModelManager.getAllStopTimeForStop(trips,stopIdSelected);
+        for (StopTime st : stopTimes){
+        	String tripId = st.getTripId();
+        	String routeId = modelManager.getTrips().get(tripId).getRouteId();
+        	String headsign = modelManager.getTrips().get(tripId).getHeadsign();
+        	String label = routeId + " " + headsign + " " + unixToTime(st.getArrivalEpoch());
+        	timesLabel.put(tripId,label);
+        	mainView.get_modelOrari().addElement(label);
+        }
+        showOrariFermata(stopName);
+	}
 
     public void showFermata() {
         mainView.get_lblLinea().setText(stopName);
         mainView.get_lblDettagli().setText("Fermata " + stopId);
         mainView.get_lblDescription().setText("Prossimi arrivi");
         mainView.get_btnInvertiDirezione().setVisible(false);
+        mainView.get_btnLive().setVisible(false);
         mainView.get_btnIndietro().setVisible(false);
         mainView.get_btnMoreInfo().setVisible(false);
         mainView.get_btnCloseSidePanel().setVisible(true);
@@ -121,34 +154,44 @@ public class StopController {
         mainView.adjustSidePanelWidth();
     }
     
-    public void showOrariFermateByIndex() {
-    	
-    	int index = mainView.get_orariList().getSelectedIndex();
-    	mainView.get_modelFermate().clear();
-    	mainView.get_modelOrari().clear();
-    	loadStopWaypoint(index);
-    }
-    
-    public void showOrariFermata(String route_id,String nome_linea){
-        int index = mainView.get_fermateList().getSelectedIndex();
-        List<Map<String, String>> times = Stop_Times.GetTimesByIndex(index);
-        mainView.get_modelOrari().clear();
-        assert times != null;
-        for (Map<String, String> ora : times){
-        	mainView.get_modelOrari().addElement(route_id + " " + nome_linea + " " + ora.get("arr"));
-        }
+    public void showOrariFermata(String stopName){     
         mainView.get_orariList().setModel(mainView.get_modelOrari());
-
-        String nome_fermata = Stop_Times.GetNameByIndex(index);
-        this.stopId = Stop_Times.GetStopIdByIndex(index);
-        mainView.get_lblLinea().setText(nome_fermata);
+        mainView.get_lblLinea().setText(stopName);
         mainView.get_lblDescription().setText("Tutti gli orari");
         mainView.get_btnInvertiDirezione().setVisible(false);
+        mainView.get_btnLive().setVisible(false);
         mainView.get_btnIndietro().setVisible(true);
         mainView.get_btnMoreInfo().setVisible(true);
         mainView.get_btnCloseSidePanel().setVisible(false);
         mainView.get_lblDettagli().setVisible(false);
         mainView.get_scrollPanel().setViewportView(mainView.get_orariList());
+    }
+    
+    public void setTrips(Map<String,Trip> trips) {
+    	this.trips = trips;
+    }
+    
+    public void setTrips_id(Set<String> trips_id) {
+    	this.trips_id = trips_id;
+    }
+    
+    public Set<String>  getTrips_id() {
+    	return trips_id;
+    }
+    
+    public void setCurrentLocalVariables() {
+    	this.waypoints = new HashSet<>(localWaypoints);
+    	this.stopsIdByTrips = new ArrayList<>(localStopsIdByTrips);
+    	this.stopsStaticLabel = new LinkedHashMap<>(localStopsStaticLabel);
+    }
+    public void setCurrentLocalWaypoints() {
+    	this.waypoints = new HashSet<>(localWaypoints);
+    }
+    public void setCurrentLocalStopsStaticLabel() {
+    	this.stopsStaticLabel = new LinkedHashMap<>(localStopsStaticLabel);
+    }
+    public void setCurrentLocalLineeStaticLabel() {
+    	this.lineeStaticLabel = new LinkedHashMap<>(localLineeStaticLabel);
     }
 	
 	public Set<MyWaypoint> get_Waypoints() {
@@ -158,17 +201,74 @@ public class StopController {
 	public String get_stopId() {
 		return stopId;
 	}
-
-	public List<String> getAllStops(){
-		System.out.println("getAllStops");
-        return allStops;
+	
+	public boolean getSelectedTrip() {
+		return selectedTrip;
 	}
 	
 	public List<String> getStopsOf(String text){
-		System.out.println("getStopsOf");
         final String lowered = text.toLowerCase();
         return allStops.stream()
                 .filter(item -> item.toLowerCase().contains(lowered))
                 .collect(Collectors.toList());
+	}
+	
+	public void updateTripUpdatesByLinea() {
+		System.out.println("updateTripUpdatesByLinea");
+		mainView.get_modelFermate().clear();
+		GTFSFetcher.fetchTripUpdates();
+		Map<String, StopTime> stopTimesRealTimeByTrips = ModelManager.getNextStopTimeRealTimeForStop(trips);
+		Map<String,String> stopsLabel = new LinkedHashMap<>(stopsStaticLabel);
+		for (Map.Entry<String, StopTime> entry: stopTimesRealTimeByTrips.entrySet()) {
+			StopTime stopTime = entry.getValue();
+			Stop stop = modelManager.getStops().get(stopTime.getStopId());
+			String stopId = stop.getStopId();
+			String stopName = stop.getName();
+			String label = "[LIVE]" + stopTime.getLabelLinea(stopName,true);
+			System.out.println(label);
+			if(stopsStaticLabel.keySet().contains(stopId)){
+				stopsLabel.put(stopId, label);
+			}
+		}
+		for(String label : stopsLabel.values()) {
+			mainView.get_modelFermate().addElement(label);
+		}
+
+	    mainView.get_scrollPanel().setViewportView(mainView.get_fermateList());
+	}
+
+	
+	public void updateTripUpdatesByFermata() {
+		System.out.println("updateTripUpdatesByFermata");
+		mainView.get_modelLinee().clear();
+		GTFSFetcher.fetchTripUpdates();
+		Map<String, StopTime> stopTimes = modelManager.getStopTimesRealTimeRouteByStopId(stopId);
+		Map<String,String> lineeLabel = new LinkedHashMap<>(lineeStaticLabel);
+		
+        for (Map.Entry<String, StopTime> entry: stopTimes.entrySet()) {
+			StopTime stopTime = entry.getValue();
+			String routeId = entry.getKey();
+			String tripId = stopTime.getTripId();
+            Trip trip = modelManager.getTrips().get(tripId);
+			String headsign = trip.getHeadsign();
+			String label = stopTime.getLabelFermata(routeId, headsign, true) + "[LIVE]";
+			System.out.println(label);
+			if(lineeStaticLabel.keySet().contains(routeId)){
+				lineeLabel.put(routeId, label);
+			}
+		}
+		
+		for(String label : lineeLabel.values()) {
+			mainView.get_modelLinee().addElement(label);
+		}
+		
+
+	    mainView.get_scrollPanel().setViewportView(mainView.get_lineeList());
+	}
+	
+	private String unixToTime(long epochSeconds) {
+	    if (epochSeconds <= 0) return "N/D";
+	    Date date = new Date(epochSeconds * 1000);
+	    return new java.text.SimpleDateFormat("HH:mm").format(date);
 	}
 }

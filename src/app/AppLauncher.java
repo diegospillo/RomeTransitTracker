@@ -3,13 +3,21 @@ package app;
 
 import controller.MapController;
 import controller.UIEventController;
+import model.ModelManager;
 import controller.LineController;
 import controller.StopController;
 import controller.BusController;
 import controller.GeneralController;
 import service.GTFSManager;
+import service.CurrentDateProvider;
 import view.MainView;
-import net.GTFSFetcher;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import javax.swing.*;
 
@@ -24,9 +32,13 @@ import javax.swing.*;
  * - UIEventController: collega pulsanti e eventi della GUI ai controller
  */
 public class AppLauncher {
+    private static final String LOCAL_FILE = "rome_static_gtfs";
     public static void launchApp(String[] args) {
         SwingUtilities.invokeLater(() -> {
-        	GTFSManager.getInstance().loadData("rome_static_gtfs","20250728");
+        
+        	GTFSManager.getInstance().loadData(LOCAL_FILE,CurrentDateProvider.getCurrentDateFormatted());
+        	ModelManager.getInstance().loadData();
+        	
             MainView mainView = new MainView();
             MapController mapController = new MapController(mainView);
             LineController lineController = new LineController(mainView);
@@ -34,9 +46,15 @@ public class AppLauncher {
             BusController busController = new BusController(mainView);
             GeneralController generalController = new GeneralController(lineController, stopController, busController, mapController);
             UIEventController uiEventController = new UIEventController(mainView, lineController, stopController, busController, mapController, generalController);
-            //GTFSFetcher.fetchTripUpdates(null, false);
             uiEventController.CloseSidePanel();
             mainView.setVisible(true);
         });
     }
 }
+
+
+//TO DO implementare bus position in mode Offline
+//TO DO mettere waypoint fermate e bus dietro i panel
+//TO DO autenticazione utente
+//TO DO gestione preferiti
+//TO DO Rileggere la consegna e fare un quadro completo

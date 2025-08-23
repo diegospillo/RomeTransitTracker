@@ -20,6 +20,7 @@ public class StopController {
 	 private final GTFSManager gtfsManager;
 	 private final ModelManager modelManager;
      private final MainView mainView;
+     private Set<MyWaypoint> pingWaypoints = new HashSet<>();
      private Set<MyWaypoint> waypoints = new HashSet<>();
      private Set<MyWaypoint> localWaypoints = new HashSet<>();
      private String stopId;
@@ -36,7 +37,7 @@ public class StopController {
      private List<String> localStopsIdByTrips = new ArrayList<>();
      private boolean selectedTrip = false;
      private boolean isFavorite = false;
-     private static Map<String, StopTime> stopTimesByTrips = new LinkedHashMap<>();
+     private Map<String, StopTime> stopTimesByTrips = new LinkedHashMap<>();
 	
      public StopController(MainView mainView){
          this.gtfsManager = GTFSManager.getInstance();
@@ -136,7 +137,8 @@ public class StopController {
         	String tripId = st.getTripId();
         	String routeId = modelManager.getTrips().get(tripId).getRouteId();
         	String headsign = modelManager.getTrips().get(tripId).getHeadsign();
-        	String label = routeId + " " + headsign + " " + unixToTime(st.getArrivalEpoch());
+        	//String label = routeId + " " + headsign + " " + unixToTime(st.getArrivalEpoch());
+        	String label = st.getLabelFermata(routeId, headsign, false);
         	timesLabel.put(tripId,label);
         	mainView.get_modelOrari().addElement(label);
         }
@@ -153,6 +155,7 @@ public class StopController {
         mainView.get_btnLive().setVisible(false);
         mainView.get_btnIndietro().setVisible(false);
         mainView.get_btnMoreInfo().setVisible(false);
+        mainView.get_comboFavorites().setVisible(false);
         mainView.get_btnCloseSidePanel().setVisible(true);
         mainView.get_lblDettagli().setVisible(true);
         mainView.get_scrollPanel().setViewportView(mainView.get_lineeList());
@@ -204,9 +207,22 @@ public class StopController {
     public void setCurrentLocalLineeStaticLabel() {
     	this.lineeStaticLabel = new LinkedHashMap<>(localLineeStaticLabel);
     }
+    
+    public void setPingWaypoints() {
+    	pingWaypoints.clear();
+    	int index = mainView.get_fermateList().getSelectedIndex();
+        String stopIdSelected = stopsIdByTrips.get(index);
+        Stop stop = modelManager.getStops().get(stopIdSelected);
+        MyWaypoint wayPoint = new MyWaypoint(0,stopName, MyWaypoint.PointType.PING, mainView.get_event(), new GeoPosition(stop.getLat(), stop.getLon()));
+    	pingWaypoints.add(wayPoint);
+    }
 	
 	public Set<MyWaypoint> get_Waypoints() {
 		return waypoints;
+	}
+	
+	public Set<MyWaypoint> get_PingWaypoints() {
+		return pingWaypoints;
 	}
 	
 	public String get_stopId() {
@@ -222,6 +238,10 @@ public class StopController {
         return allStops.stream()
                 .filter(item -> item.toLowerCase().contains(lowered))
                 .collect(Collectors.toList());
+	}
+	
+	public Map<String, StopTime> getStopTimesByTrips(){
+		return stopTimesByTrips;
 	}
 	
 	public void updateTripUpdatesByLinea() {

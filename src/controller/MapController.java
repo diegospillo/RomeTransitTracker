@@ -1,5 +1,6 @@
 package controller;
 
+import java.awt.Color;
 import java.util.*;
 import data.JXMapViewerCustom;
 import data.RoutingService;
@@ -22,18 +23,19 @@ public class MapController {
 		this.gtfsManager = GTFSManager.getInstance();
 	}
 	
-	public void initStopsWaypoint(String shapes_id,Set<MyWaypoint> waypoints) {
+	public void initStopsWaypoint(String route_id, String shapes_id,Set<MyWaypoint> waypoints) {
         System.out.println("initStopsWaypoint");
         jXMapViewer.setStopPainter(waypoints);
         for (MyWaypoint d : waypoints) {
             jXMapViewer.add(d.getButton());
-            jXMapViewer.setComponentZOrder(d.getButton(), 2);
+            jXMapViewer.setComponentZOrder(d.getButton(), 3);
         }
         jXMapViewer.setComponentZOrder(mainView.get_topBar(), 0);
         jXMapViewer.setComponentZOrder(mainView.get_sidePanel(), 0);
         DataGTFS routingData = RoutingService.routing(gtfsManager.getShapes(),shapes_id);
+        Color colorRouteType = RoutingService.getColorRoutingType(route_id);
 
-        jXMapViewer.setRoutingData(routingData);
+        jXMapViewer.setRoutingData(routingData,colorRouteType);
     }
 	
 	public void initBusWaypoint(Set<MyWaypoint> waypoints) {
@@ -41,11 +43,22 @@ public class MapController {
         jXMapViewer.setBusPainter(waypoints);
         for (MyWaypoint d : waypoints) {
             jXMapViewer.add(d.getButton());
-            jXMapViewer.setComponentZOrder(d.getButton(), 1);
+            jXMapViewer.setComponentZOrder(d.getButton(), 2);
         }
         jXMapViewer.setComponentZOrder(mainView.get_topBar(), 0);
         jXMapViewer.setComponentZOrder(mainView.get_sidePanel(), 0);
     }
+	
+	public void initPingWaypoint(Set<MyWaypoint> waypoints) {
+		System.out.println("initPingWaypoint");
+        jXMapViewer.setPingPainter(waypoints);
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.add(d.getButton());
+            jXMapViewer.setComponentZOrder(d.getButton(), 1);
+        }
+        jXMapViewer.setComponentZOrder(mainView.get_topBar(), 0);
+        jXMapViewer.setComponentZOrder(mainView.get_sidePanel(), 0);
+	}
 	
 	public void clearStopsWaypoint(Set<MyWaypoint> waypoints) {
         for (MyWaypoint d : waypoints) {
@@ -58,6 +71,13 @@ public class MapController {
     }
 	
 	public void clearBusWaypoint(Set<MyWaypoint> waypoints) {
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.remove(d.getButton());
+        }
+        waypoints.clear();
+    }
+	
+	public void clearPingWaypoint(Set<MyWaypoint> waypoints) {
         for (MyWaypoint d : waypoints) {
             jXMapViewer.remove(d.getButton());
         }

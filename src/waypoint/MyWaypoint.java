@@ -67,22 +67,33 @@ public class MyWaypoint extends DefaultWaypoint {
                 break;
             case BUS:
                 button = new ButtonWaypoint("/icon/bus.png",24);
+                break;
+            case METRO:
+                button = new ButtonWaypoint("/icon/metro.png",24);
+                break;
+            case TRAM:
+                button = new ButtonWaypoint("/icon/tram.png",24);
+                break;
+            case PING:
+                button = new ButtonWaypoint("/icon/pin.png",24);
 
         }
         button.setContentAreaFilled(false);
         button.setBorderPainted(false);
         button.setFocusPainted(false);
         button.setOpaque(false);
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-            	System.out.println(MyWaypoint.this.index);
-                event.selected(MyWaypoint.this);
-            }
-        });
+        if(pointType != PointType.PING){
+	        button.addActionListener(new ActionListener() {
+	            @Override
+	            public void actionPerformed(ActionEvent ae) {
+	            	System.out.println(MyWaypoint.this.index);
+	                event.selected(MyWaypoint.this);
+	            }
+	        });
+        }
     }
 
     public static enum PointType {
-        START, END, STOPS, BUS
+        START, END, STOPS, BUS, METRO, TRAM, PING
     }
 }

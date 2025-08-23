@@ -27,6 +27,7 @@ public class UIEventController {
     private final BusController busController;
     private final MapController mapController;
     private final GeneralController generalController;
+    private final FavoritesController favoritesController;
     private final FavoritesManager favoritesManager = FavoritesManager.getInstance();
     
     private Timer timer = new Timer();
@@ -37,13 +38,15 @@ public class UIEventController {
                              StopController stopController,
                              BusController busController,
                              MapController mapController,
-                             GeneralController generalController) {
+                             GeneralController generalController,
+                             FavoritesController favoritesController) {
         this.mainView = mainView;
         this.lineController = lineController;
         this.stopController = stopController;
         this.busController = busController;
         this.mapController = mapController;
         this.generalController = generalController;
+        this.favoritesController = favoritesController;
         setupEventHandlers();
         updateSearchList("");
     }
@@ -57,6 +60,11 @@ public class UIEventController {
             		stopController.viewTimesByStop();
             		generalController.setStopSelected(true);
                 }
+            	else if(e.getClickCount() == 1) {
+            		mapController.clearPingWaypoint(stopController.get_PingWaypoints());
+            		stopController.setPingWaypoints();
+            		mapController.initPingWaypoint(stopController.get_PingWaypoints());
+            	}
             }
         });
         
@@ -140,6 +148,28 @@ public class UIEventController {
             }
         });
         
+        mainView.get_btnViewFavorites().addActionListener(e -> showFavorites());
+
+        mainView.get_comboFavorites().addActionListener(e -> showFavorites());
+
+        mainView.get_favoritesList().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    String value = mainView.get_favoritesList().getSelectedValue();
+                    if (value != null) {
+                        String id = extractId(value);
+                        int selected = mainView.get_comboFavorites().getSelectedIndex();
+                        if (selected == 0) {
+                            generalController.visualizzaLinea(id, true);
+                        } else {
+                            generalController.visualizzaFermata(id);
+                        }
+                    }
+                }
+            }
+        });
+        
         mainView.get_TextInput().getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -185,7 +215,7 @@ public class UIEventController {
             @Override
             public void selected(MyWaypoint waypoint) {
             	int index = waypoint.getIndex();
-            	if (waypoint.getPointType().equals(MyWaypoint.PointType.BUS)) {
+            	if (waypoint.getPointType().equals(MyWaypoint.PointType.BUS) || waypoint.getPointType().equals(MyWaypoint.PointType.METRO) || waypoint.getPointType().equals(MyWaypoint.PointType.TRAM)) {
             		System.out.println(waypoint.getName());
             		generalController.visualizzaTrip(waypoint.getName());
             	}
@@ -193,6 +223,9 @@ public class UIEventController {
             		mainView.get_fermateList().setSelectedIndex(index);
             		stopController.viewTimesByStop();
             		generalController.setStopSelected(true);
+            		mapController.clearPingWaypoint(stopController.get_PingWaypoints());
+            		stopController.setPingWaypoints();
+            		mapController.initPingWaypoint(stopController.get_PingWaypoints());
             	}
             }
         };
@@ -234,12 +267,12 @@ public class UIEventController {
     private void addFavorite() {
         String stopId = stopController.get_stopId();
         String lineId = lineController.get_route_id();
-        if (stopId != null) {
+        if (stopId != null && generalController.getCurrentSate()==1){
             favoritesManager.addStop(stopId);
             stopController.setIsFavorite(true);
             stopController.showFermata();
         }
-        if (lineId != null) {
+        if (lineId != null && generalController.getCurrentSate()==0){
             favoritesManager.addLine(lineId);
             lineController.setIsFavorite(true);
             lineController.showLinea(lineController.getSelectedTrip());
@@ -250,16 +283,41 @@ public class UIEventController {
     private void deleteFavorite() {
         String stopId = stopController.get_stopId();
         String lineId = lineController.get_route_id();
-        if (stopId != null) {
+        if (stopId != null && generalController.getCurrentSate()==1) {
             favoritesManager.removeStop(stopId);
             stopController.setIsFavorite(false);
             stopController.showFermata();
         }
-        if (lineId != null) {
+        if (lineId != null && generalController.getCurrentSate()==0) {
             favoritesManager.removeLine(lineId);
             lineController.setIsFavorite(false);
             lineController.showLinea(lineController.getSelectedTrip());
         }
+    }
+    
+    private void showFavorites() {
+    	generalController.Close();
+        boolean showLines = mainView.get_comboFavorites().getSelectedIndex() == 0;
+        favoritesController.showFavorites(showLines);
+
+        mainView.get_lblLinea().setText("Preferiti");
+        mainView.get_lblDescription().setText("");
+        mainView.get_lblDettagli().setVisible(false);
+        mainView.get_btnAddFavorite().setVisible(false);
+        mainView.get_btnDeleteFavorite().setVisible(false);
+        mainView.get_btnInvertiDirezione().setVisible(false);
+        mainView.get_btnLive().setVisible(false);
+        mainView.get_btnIndietro().setVisible(false);
+        mainView.get_btnMoreInfo().setVisible(false);
+        mainView.get_btnCloseSidePanel().setVisible(true);
+        mainView.get_comboFavorites().setVisible(true);
+        mainView.get_scrollPanel().setViewportView(mainView.get_favoritesList());
+        if (!mainView.get_sidePanel().isVisible()) {
+            mainView.get_sidePanel().setVisible(true);
+            mainView.get_toggleSidePanelBtn().setVisible(true);
+            mainView.get_toggleSidePanelBtn().setIcon(mainView.get_leftIcon());
+        }
+        mainView.adjustSidePanelWidth();
     }
     
     private void controlSidePanel() {

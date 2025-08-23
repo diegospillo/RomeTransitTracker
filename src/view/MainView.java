@@ -19,10 +19,12 @@ public class MainView extends JFrame {
     private final MapView mapView = new MapView();
     private final JComboBox<String> comboMapType = new JComboBox<>();
     private final JComboBox<String> comboSearchControl = new JComboBox<>();
+    private final JPanel offlinePanel = new JPanel();
     
     private DefaultListModel<String> modelFermate;
     private DefaultListModel<String> modelOrari;
     private DefaultListModel<String> modelLinee;
+    private DefaultListModel<String> modelFavorites;
     private EventWaypoint event;
     private JLabel lblLinea;
     private JLabel lblDescription;
@@ -39,9 +41,12 @@ public class MainView extends JFrame {
     private JList<String> fermateList;
     private JList<String> orariList;
     private JList<String> lineeList;
+    private JList<String> favoritesList;
     private DefaultListModel<String> modelSearch;
     private JList<String> searchList;
     private JScrollPane searchScroll;
+    private JButton btnViewFavorites;
+    private JComboBox<String> comboFavorites;
     private JPanel topBar;
     private JPanel sidePanel;
     private ImageIcon leftIcon;
@@ -88,14 +93,31 @@ public class MainView extends JFrame {
         searchPanel.add(textInput);
         topBar.add(searchPanel, BorderLayout.CENTER);
 
-        comboMapType.setModel(new DefaultComboBoxModel<>(new String[] { "Open Street", "Virtual Earth", "Hybrid", "Satellite" }));
+        /*comboMapType.setModel(new DefaultComboBoxModel<>(new String[] { "Open Street", "Virtual Earth", "Hybrid", "Satellite" }));
         topBar.add(comboMapType, BorderLayout.EAST);
 
         comboMapType.addActionListener(this::comboMapTypeActionPerformed);
         comboMapType.setVisible(false);
+        */
+        ImageIcon offlineIcon = new ImageIcon(getClass().getResource("/icon/offlineIcon.png"));
+        Image offlineImg = offlineIcon.getImage();
+        Image offlineResized = offlineImg.getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+        ImageIcon offlineScaledIcon = new ImageIcon(offlineResized);
+        JLabel offlineIconLabel = new JLabel(offlineScaledIcon);
+        offlinePanel.add(offlineIconLabel);
+        offlinePanel.setOpaque(false);
+        offlinePanel.setVisible(false);
+        topBar.add(offlinePanel, BorderLayout.EAST);
         
         comboSearchControl.setModel(new DefaultComboBoxModel<>(new String[] { "Linee", "Fermate" }));
         searchPanel.add(comboSearchControl, BorderLayout.EAST);
+        
+        ImageIcon favListIcon = new ImageIcon(getClass().getResource("/icon/fav-list.png"));
+        Image favImg = favListIcon.getImage();
+        Image favResized = favImg.getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+        ImageIcon favScaledIcon = new ImageIcon(favResized);
+        btnViewFavorites = new JButton(favScaledIcon);
+        searchPanel.add(btnViewFavorites);
 
         //add(topBar, BorderLayout.NORTH);
         
@@ -117,6 +139,12 @@ public class MainView extends JFrame {
         lineeList.setFont(new Font("SansSerif", Font.PLAIN, 14));
         lineeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lineeList.setCellRenderer(new FermataRenderer());
+        
+        modelFavorites = new DefaultListModel<>();
+        favoritesList = new JList<>(modelFavorites);
+        favoritesList.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        favoritesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        favoritesList.setCellRenderer(new FermataRenderer());
         
         modelSearch = new DefaultListModel<>();
         searchList = new JList<>(modelSearch);
@@ -216,6 +244,9 @@ public class MainView extends JFrame {
         descriptionPanel.add(lblDescription, BorderLayout.WEST);
         descriptionPanel.add(btnLive, BorderLayout.WEST);
         descriptionPanel.add(btnInvertiDirezione, BorderLayout.EAST);
+        comboFavorites = new JComboBox<>(new String[] { "Linee", "Fermate" });
+        comboFavorites.setVisible(false);
+        descriptionPanel.add(comboFavorites);
         InfoPanel.add(lblDettagli,BorderLayout.CENTER);
         InfoPanel.add(descriptionPanel, BorderLayout.SOUTH);
         sidePanel.add(InfoPanel, BorderLayout.NORTH);
@@ -244,7 +275,7 @@ public class MainView extends JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(topBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 761, Short.MAX_VALUE)
-                                .addComponent(comboMapType, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(offlinePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap())
         );
 
@@ -254,7 +285,7 @@ public class MainView extends JFrame {
                                 .addContainerGap()
                                 .addGroup(jXMapViewerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                         .addComponent(sidePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE)
-                                        .addComponent(comboMapType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(offlinePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(topBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         )
                                 .addContainerGap())
@@ -326,6 +357,8 @@ public class MainView extends JFrame {
         private String displayText = ""; // testo senza il marker [LIVE]
         private Icon liveIcon;
         private Icon offlineIcon;
+        private Icon favoriteLineIcon;
+        private Icon favoriteStopIcon;
 
         public FermataRenderer() {
             setLayout(new BorderLayout(8, 0));
@@ -335,6 +368,9 @@ public class MainView extends JFrame {
             // carica le icone (dimensioni 18x18)
             liveIcon = loadIcon("/icon/online.png", 18, 18);
             offlineIcon = loadIcon("/icon/offline.png", 18, 18);
+            favoriteLineIcon = loadIcon("/icon/distance.png", 18, 18);
+            favoriteStopIcon = loadIcon("/icon/bus-stand.png", 18, 18);
+            
 
             // icona a sinistra, testo al centro (ma non lo mostriamo: disegniamo noi)
             add(iconLabel, BorderLayout.WEST);
@@ -353,14 +389,25 @@ public class MainView extends JFrame {
             // valuta se LIVE o PASSED
             boolean isLive = value != null && value.contains("[LIVE]");
             boolean isPassed = value != null && value.contains("[PASSED]");
+            boolean isFavoriteLine = value != null && value.contains("[LINEA]");
+            boolean isFavoriteStop = value != null && value.contains("[STOP]");
             this.isPassed = isPassed;
             // testo da visualizzare
             displayText = (value == null) ? "" : value
                     .replace("[LIVE]", "")
-                    .replace("[PASSED]", "");
+                    .replace("[PASSED]", "")
+                    .replace("[LINEA]", "")
+                    .replace("[STOP]", "");
 
             // set icona
             iconLabel.setIcon(isLive ? liveIcon : offlineIcon);
+            
+            if(isFavoriteLine) {
+            	iconLabel.setIcon(favoriteLineIcon);
+            }
+            else if(isFavoriteStop) {
+            	iconLabel.setIcon(favoriteStopIcon);
+            }
 
             // dimensione preferita (larghezza testo + icona + padding)
             FontMetrics fm = getFontMetrics(getFont());
@@ -511,6 +558,9 @@ public class MainView extends JFrame {
     public JList<String> get_lineeList(){
     	return lineeList;
     }
+    public JList<String> get_favoritesList(){
+        return favoritesList;
+    }
     public JList<String> get_searchList(){
         return searchList;
     }
@@ -520,11 +570,25 @@ public class MainView extends JFrame {
     public JPanel get_topBar() {
         return topBar;
     }
+    public JPanel get_offlinePanel() {
+    	return offlinePanel;
+    }
     public ImageIcon get_leftIcon() {
     	return leftIcon;
     }
     public ImageIcon get_rightIcon() {
     	return rightIcon;
+    }
+    public DefaultListModel<String> get_modelFavorites() {
+        return modelFavorites;
+    }
+
+    public JButton get_btnViewFavorites() {
+        return btnViewFavorites;
+    }
+
+    public JComboBox<String> get_comboFavorites() {
+        return comboFavorites;
     }
 
     public MapView getMapView() {

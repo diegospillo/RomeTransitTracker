@@ -24,6 +24,7 @@ public class JXMapViewerCustom extends JXMapViewer {
 
 	private WaypointPainter<MyWaypoint> stopPainter;
     private WaypointPainter<MyWaypoint> busPainter;
+    private WaypointPainter<MyWaypoint> pingPainter;
     
     public void setStopPainter(Set<MyWaypoint> stopWaypoints) {
         stopPainter = new WaypointRender();
@@ -38,11 +39,20 @@ public class JXMapViewerCustom extends JXMapViewer {
         busPainter.setWaypoints(busWaypoints);
         updatePainters();
     }
+    
+    public void setPingPainter(Set<MyWaypoint> pingWaypoints) {
+        if (pingPainter == null) {
+        	pingPainter = new WaypointRender();
+        }
+        pingPainter.setWaypoints(pingWaypoints);
+        updatePainters();
+    }
 
     private void updatePainters() {
         List<Painter<JXMapViewer>> painters = new ArrayList<>();
         if (stopPainter != null) painters.add(stopPainter);
         if (busPainter != null) painters.add(busPainter);
+        if (pingPainter != null) painters.add(pingPainter);
         CompoundPainter<JXMapViewer> compoundPainter = new CompoundPainter<>(painters);
         this.setOverlayPainter(compoundPainter);
         repaint();
@@ -52,8 +62,9 @@ public class JXMapViewerCustom extends JXMapViewer {
         return routingData;
     }
 
-    public void setRoutingData(DataGTFS routingData) {
+    public void setRoutingData(DataGTFS routingData,Color colorRouteType) {
         this.routingData = routingData;
+        this.colorRouteType = colorRouteType;
         repaint();
     }
     
@@ -65,6 +76,7 @@ public class JXMapViewerCustom extends JXMapViewer {
     }
 
     private DataGTFS routingData;
+    private Color colorRouteType;
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -78,7 +90,7 @@ public class JXMapViewerCustom extends JXMapViewer {
                 draw(p2, d, g2);
             }
             //g2.setColor(new Color(28, 23, 255));
-            g2.setColor(new Color(153, 0, 0));
+            g2.setColor(colorRouteType);
             g2.setStroke(new BasicStroke(5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             g2.draw(p2);
             g2.dispose();

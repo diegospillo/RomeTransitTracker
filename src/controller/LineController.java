@@ -1,9 +1,11 @@
 package controller;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import model.ModelManager;
+import model.StopTime;
 import model.Trip;
 import service.DataRow;
 import service.FavoritesManager;
@@ -19,6 +21,7 @@ public class LineController{
     private String shape_id;
     private String nome_linea;
     private Map<String,Trip> trips;
+    private Map<String,StopTime> currentTrips;
     private boolean direction = true;
     private final List<String> allLines;
     private boolean selectedTrip = false;
@@ -97,10 +100,28 @@ public class LineController{
 		mainView.get_btnIndietro().setVisible(false);
 		mainView.get_btnMoreInfo().setVisible(false);
 		mainView.get_btnCloseSidePanel().setVisible(true);
+		mainView.get_comboFavorites().setVisible(false);
 		mainView.get_lblDettagli().setVisible(true);
 		mainView.get_scrollPanel().setViewportView(mainView.get_fermateList());
 		mainView.adjustSidePanelWidth();
     }
+	
+	public void setCurrentTrips(Map<String, StopTime> stopTimesByTrips) {
+		currentTrips = new HashMap<>();
+		long now = Instant.now().getEpochSecond();
+		for(StopTime st : stopTimesByTrips.values()) {
+			String tripId = st.getTripId();
+			long effectiveArrival = st.getArrivalEpoch() + st.getDelaySeconds();
+            // Solo se è un arrivo futuro
+            if (effectiveArrival >= now) {
+                // Se non c'è ancora nulla per questo stop oppure è più vicino
+                if (!currentTrips.containsKey(tripId) ||
+                    effectiveArrival < currentTrips.get(tripId).getArrivalEpoch() + currentTrips.get(tripId).getDelaySeconds()) {
+                	currentTrips.put(tripId, st);
+                }
+            }
+        }
+	}
 	
 	public void setIsFavorite(boolean isFavorite) {
     	this.isFavorite = isFavorite;
@@ -127,6 +148,9 @@ public class LineController{
 	}
 	public boolean getSelectedTrip() {
 		return selectedTrip;
+	}
+	public Map<String,StopTime> getCurrentTrips(){
+		return this.currentTrips;
 	}
 	
 }

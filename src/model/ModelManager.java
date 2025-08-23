@@ -146,7 +146,7 @@ public class ModelManager {
                 long effectiveArrival = st.getArrivalEpoch() + st.getDelaySeconds();
 
                 // Solo se è un arrivo futuro
-                if (effectiveArrival > now) {
+                if (effectiveArrival >= now) {
                     // Se non c'è ancora nulla per questo stop oppure è più vicino
                     if (!result.containsKey(stopId) ||
                         effectiveArrival < result.get(stopId).getArrivalEpoch() + result.get(stopId).getDelaySeconds()) {
@@ -178,7 +178,7 @@ public class ModelManager {
                 String stopId = st.getStopId();
                 long effectiveArrival = st.getArrivalEpoch() + st.getDelaySeconds();
                 // Solo se è un arrivo futuro
-                if (effectiveArrival > now) {
+                if (effectiveArrival >= now) {
                     // Se non c'è ancora nulla per questo stop oppure è più vicino
                     if (!result.containsKey(stopId) ||
                         effectiveArrival < result.get(stopId).getArrivalEpoch() + result.get(stopId).getDelaySeconds()) {
@@ -286,7 +286,7 @@ public class ModelManager {
                 long effectiveArrival = st.getArrivalEpoch() + st.getDelaySeconds();
 
                 // Solo se è un arrivo futuro
-                if (effectiveArrival > now) {
+                if (effectiveArrival >= now) {
                     // Se non c'è ancora nulla per questo stop oppure è più vicino
                     if (!result.containsKey(routeId) ||
                         effectiveArrival < result.get(routeId).getArrivalEpoch() + result.get(routeId).getDelaySeconds()) {
@@ -326,7 +326,7 @@ public class ModelManager {
                 long effectiveArrival = st.getArrivalEpoch() + st.getDelaySeconds();
 
                 // Solo se è un arrivo futuro
-                if (effectiveArrival > now) {
+                if (effectiveArrival >= now) {
                     // Se non c'è ancora nulla per questo stop oppure è più vicino
                     if (!result.containsKey(routeId) ||
                         effectiveArrival < result.get(routeId).getArrivalEpoch() + result.get(routeId).getDelaySeconds()) {

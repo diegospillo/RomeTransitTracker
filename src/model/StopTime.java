@@ -121,6 +121,14 @@ public class StopTime {
 
         return label;
     }
+    
+    public Long getDiffMinutes() {
+    	long now = Instant.now().getEpochSecond();
+    	long adjustedArrival = arrivalEpoch + delaySeconds;
+    	long diffMillis = adjustedArrival - now;
+        long minutes = diffMillis / 60; // 1 minuto = 60.000 ms 
+        return minutes;
+    }
 
 
 }

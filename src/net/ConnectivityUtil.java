@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import view.MainView;
+
 /** Utility to check if network is reachable to decide between online and offline mode. */
 public class ConnectivityUtil {
 	private static boolean offlineMode = false;
+	private static MainView mainview;
 
     private static final String TEST_URL = "https://romamobilita.it";
     
@@ -21,10 +24,16 @@ public class ConnectivityUtil {
                             "Modalità Offline",
                             javax.swing.JOptionPane.WARNING_MESSAGE);
                 });
+                mainview.get_offlinePanel().setVisible(true);
             }
         } else {
             offlineMode = false;
+            mainview.get_offlinePanel().setVisible(false);
         }
+    }
+    
+    public static void setInstanceMainView(MainView instanceMainview) {
+    	mainview = instanceMainview;
     }
 
     private static boolean isOnline() {

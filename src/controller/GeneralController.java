@@ -2,11 +2,14 @@ package controller;
 
 import java.util.*;
 
+import model.StopTime;
+import model.Trip;
 import net.ConnectivityUtil;
 import waypoint.MyWaypoint;
 
 public class GeneralController {
 	private int StateControl = 0;
+	private int CurrentSate = 0;
 	private boolean StopSelected = false;
 	private final int DELAY = 30000;
 	private javax.swing.Timer fermataTimer;
@@ -29,7 +32,8 @@ public class GeneralController {
     public void visualizzaLinea(String routeId, boolean direction) {
         // 1. Reset dati precedenti
     	Close();
-    	
+    	CurrentSate = 0;
+    	busController.setIsSelected(false);
         // 2. Carica la linea e ottieni shape_id
         lineController.viewRouteByName(routeId, direction); // true = centratura mappa, se previsto
         
@@ -41,8 +45,10 @@ public class GeneralController {
         stopController.loadStopWaypoint(false);
         stopController.setCurrentLocalVariables();
         
+        lineController.setCurrentTrips(stopController.getStopTimesByTrips());
+        
         Set<MyWaypoint> waypoints = stopController.get_Waypoints();      
-        mapController.initStopsWaypoint(shapeId, waypoints);
+        mapController.initStopsWaypoint(lineController.get_route_id(),shapeId, waypoints);
 
         // 4. Mostra linea sulla mappa
         lineController.showLinea(false);
@@ -58,7 +64,8 @@ public class GeneralController {
     public void visualizzaTrip(String tripId) {
         // 1. Reset dati precedenti
     	Close();
-        
+    	CurrentSate = 0;
+    	busController.setIsSelected(true);
     	lineController.viewRouteTrip(tripId);
     	
     	String shapeId = lineController.get_shape_id();
@@ -70,8 +77,10 @@ public class GeneralController {
         stopController.setCurrentLocalWaypoints();
         stopController.setCurrentLocalStopsStaticLabel();
         
+        lineController.setCurrentTrips(stopController.getStopTimesByTrips());
+        
         Set<MyWaypoint> waypoints = stopController.get_Waypoints();      
-        mapController.initStopsWaypoint(shapeId, waypoints);
+        mapController.initStopsWaypoint(lineController.get_route_id(),shapeId, waypoints);
 
         // 4. Mostra linea sulla mappa
         lineController.showLinea(true);
@@ -87,7 +96,8 @@ public class GeneralController {
     public void visualizzaFermata(String stop_id) {
         // 1. Reset dati precedenti
     	Close();
-
+    	CurrentSate = 1;
+    	busController.setIsSelected(false);
         // 2. Carica le informazioni della fermata
         stopController.viewStopById(stop_id);
         stopController.setCurrentLocalWaypoints();
@@ -96,7 +106,7 @@ public class GeneralController {
         Set<MyWaypoint> waypoints = stopController.get_Waypoints();
 
         // 3. Aggiorna la mappa con la singola fermata
-        mapController.initStopsWaypoint("", waypoints);
+        mapController.initStopsWaypoint(null,"", waypoints);
 
         // 4. Mostra la fermata nella vista laterale
         stopController.showFermata();
@@ -110,6 +120,8 @@ public class GeneralController {
     	mapController.clearStopsWaypoint(stopswaypoints);
     	Set<MyWaypoint> buswaypoints = busController.get_Waypoints();
     	mapController.clearBusWaypoint(buswaypoints);
+    	Set<MyWaypoint> pingwaypoints = stopController.get_PingWaypoints();
+    	mapController.clearPingWaypoint(pingwaypoints);
     }
     
     public void Close() {
@@ -159,8 +171,18 @@ public class GeneralController {
     private void updateByLinea() {
     	//OfflineMode
     	
+    	// 2.Rimuovi i vecchi waypoint
+    	Set<MyWaypoint> oldWaypoints = busController.get_Waypoints();
+        mapController.clearBusWaypoint(oldWaypoints);
+    	
     	// 3. Carica fermate per shape e aggiorna overlay
         stopController.loadStopWaypoint(stopController.getSelectedTrip());
+        lineController.setCurrentTrips(stopController.getStopTimesByTrips());
+        
+        
+        busController.updateStaticBusPositions(lineController.get_route_id(),lineController.getCurrentTrips());
+        Set<MyWaypoint> newWaypoints = busController.get_Waypoints();
+        mapController.initBusWaypoint(newWaypoints);
     	
     	ConnectivityUtil.checkConnectivityAndSwitchMode();
     	if (ConnectivityUtil.isOfflineMode()) {
@@ -176,16 +198,16 @@ public class GeneralController {
         
         // 7. Init bus
         // Rimuovi i vecchi waypoint
-        Set<MyWaypoint> oldWaypoints = busController.get_Waypoints();
+        oldWaypoints = busController.get_Waypoints();
         mapController.clearBusWaypoint(oldWaypoints);
 
         // Aggiorna i dati dei bus
         String routeId = lineController.get_route_id();
     	boolean direction = lineController.get_direction();
-        busController.updateBusPositions(routeId,direction);
+        busController.updateBusPositions(routeId,direction,lineController.getCurrentTrips());
 
         // Aggiungi i nuovi waypoint
-        Set<MyWaypoint> newWaypoints = busController.get_Waypoints();
+        newWaypoints = busController.get_Waypoints();
         mapController.initBusWaypoint(newWaypoints);
     }
     
@@ -227,6 +249,9 @@ public class GeneralController {
     }
     public int getStateControl() {
     	return StateControl;
+    }
+    public int getCurrentSate() {
+    	return CurrentSate;
     }
     public void setStopSelected(boolean StopSelected) {
     	this.StopSelected = StopSelected;

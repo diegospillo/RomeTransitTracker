@@ -8,7 +8,16 @@ public class FileUserRepository {
     private final Path filePath;
 
     public FileUserRepository(String filename) {
-        this.filePath = Paths.get(filename);
+    	Path dir = Paths.get("user_data");  // cartella per i dati
+        try {
+            if (!Files.exists(dir)) {
+                Files.createDirectories(dir);  // crea la cartella se non esiste
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Errore creazione cartella user_data", e);
+        }
+
+        this.filePath = dir.resolve(filename);
         try {
             if (!Files.exists(filePath)) {
                 Files.createFile(filePath);

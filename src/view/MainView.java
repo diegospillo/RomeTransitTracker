@@ -37,6 +37,7 @@ public class MainView extends JFrame {
     private JButton btnDeleteFavorite;
     private JButton btnCloseSidePanel;
     private JButton toggleSidePanelBtn;
+    private JButton btnLogout;
     private JScrollPane scrollPanel;
     private JList<String> fermateList;
     private JList<String> orariList;
@@ -120,6 +121,7 @@ public class MainView extends JFrame {
         searchPanel.add(btnViewFavorites);
 
         //add(topBar, BorderLayout.NORTH);
+        btnLogout = new JButton("Logout");
         
         
         modelFermate = new DefaultListModel<>();
@@ -276,6 +278,8 @@ public class MainView extends JFrame {
                                 .addComponent(topBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 761, Short.MAX_VALUE)
                                 .addComponent(offlinePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
+                                .addComponent(btnLogout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap())
         );
 
@@ -287,7 +291,7 @@ public class MainView extends JFrame {
                                         .addComponent(sidePanel, javax.swing.GroupLayout.DEFAULT_SIZE, 626, Short.MAX_VALUE)
                                         .addComponent(offlinePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(topBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        )
+                                        .addComponent(btnLogout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addContainerGap())
         );
 
@@ -539,6 +543,9 @@ public class MainView extends JFrame {
     }
     public JButton get_btnCloseSidePanel() {
     	return btnCloseSidePanel;
+    }
+    public JButton get_btnLogout() {
+    	return btnLogout;
     }
     public JButton get_toggleSidePanelBtn() {
     	return toggleSidePanelBtn;

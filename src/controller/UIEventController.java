@@ -1,6 +1,7 @@
 package controller;
 
 import java.awt.Color;
+import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -11,10 +12,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import app.AppLauncher;
 import service.FavoritesManager;
 import view.MainView;
 import waypoint.EventWaypoint;
@@ -54,19 +57,36 @@ public class UIEventController {
     private void setupEventHandlers() {
 
         // Aggiungere un listener per il doppio click su una fermata
-        mainView.get_fermateList().addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-            	if (e.getClickCount() == 2) {// Doppio click
-            		stopController.viewTimesByStop();
-            		generalController.setStopSelected(true);
-                }
-            	else if(e.getClickCount() == 1) {
-            		mapController.clearPingWaypoint(stopController.get_PingWaypoints());
-            		stopController.setPingWaypoints();
-            		mapController.initPingWaypoint(stopController.get_PingWaypoints());
-            	}
-            }
-        });
+    	
+    	// Singolo click / cambio selezione (solo quando è definitivo)
+    	mainView.get_fermateList().addListSelectionListener(e -> {
+    	    if (!e.getValueIsAdjusting()) { // evita eventi intermedi
+    	    	int index = mainView.get_fermateList().getSelectedIndex();
+    	    	if (index < 0) {
+    	    	    // nessuna selezione valida: opzionale refresh UI e return
+    	    	    return;
+    	    	}
+    	        mapController.clearPingWaypoint(stopController.get_PingWaypoints());
+    	        stopController.setPingWaypoints();
+    	        mapController.initPingWaypoint(stopController.get_PingWaypoints());
+    	    }
+    	});
+
+    	// Doppio click
+    	mainView.get_fermateList().addMouseListener(new MouseAdapter() {
+    	    @Override public void mouseClicked(MouseEvent e) {
+    	        if (!SwingUtilities.isLeftMouseButton(e)) return;
+
+    	        // Assicurati che si stia cliccando su una cella valida
+    	        int index = mainView.get_fermateList().locationToIndex(e.getPoint());
+    	        if (index < 0 || !mainView.get_fermateList().getCellBounds(index, index).contains(e.getPoint())) return;
+
+    	        if (e.getClickCount() == 2) {
+    	            stopController.viewTimesByStop();
+    	            generalController.setStopSelected(true);
+    	        }
+    	    }
+    	});
         
         mainView.get_lineeList().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -121,6 +141,12 @@ public class UIEventController {
         mainView.get_btnCloseSidePanel().addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	CloseSidePanel();
+            }
+        });
+        
+        mainView.get_btnLogout().addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	Logout();
             }
         });
         
@@ -380,6 +406,22 @@ public class UIEventController {
             }
         };
         worker.execute();
+    }
+    
+    public void Logout() {
+    	// 1) chiudi UI corrente sull'EDT
+        SwingUtilities.invokeLater(() -> {
+            for (Window w : Window.getWindows()) {
+                w.dispose();
+            }
+
+            // 2) pulisci lo stato di sessione
+            FavoritesManager.getInstance().setCurrentUser(null);
+
+
+            // 3) rilancia AppLauncher su un nuovo thread (NON sull'EDT)
+            new Thread(() -> AppLauncher.launchApp(new String[0]), "AppRelauncher").start();
+        });
     }
     
     public static String extractId(String itemString) {

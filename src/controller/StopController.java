@@ -209,8 +209,12 @@ public class StopController {
     }
     
     public void setPingWaypoints() {
-    	pingWaypoints.clear();
     	int index = mainView.get_fermateList().getSelectedIndex();
+    	if (index < 0 || index >= stopsIdByTrips.size()) {
+    	    // nessuna selezione valida: opzionale refresh UI e return
+    	    return;
+    	}
+    	pingWaypoints.clear();
         String stopIdSelected = stopsIdByTrips.get(index);
         Stop stop = modelManager.getStops().get(stopIdSelected);
         MyWaypoint wayPoint = new MyWaypoint(0,stopName, MyWaypoint.PointType.PING, mainView.get_event(), new GeoPosition(stop.getLat(), stop.getLon()));

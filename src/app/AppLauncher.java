@@ -12,18 +12,22 @@ import controller.GeneralController;
 import controller.FavoritesController;
 import service.GTFSManager;
 import service.CurrentDateProvider;
+import service.FavoritesManager;
+import view.LoginView;
 import view.MainView;
 
-import java.io.IOException;
+import java.awt.image.BufferedImage;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 
 import auth.AuthenticationManager;
+import auth.AuthenticationService;
 import auth.FileUserRepository;
 
 /**
@@ -38,37 +42,46 @@ import auth.FileUserRepository;
  */
 public class AppLauncher {
     private static final String LOCAL_FILE = "rome_static_gtfs";
+
     public static void launchApp(String[] args) {
-    	FileUserRepository repo = new FileUserRepository("users.txt");
-        AuthenticationManager auth = new AuthenticationManager(repo);
+        // Parte subito in background
+        CompletableFuture<Void> preload = CompletableFuture.runAsync(() -> {
+            GTFSManager.getInstance().loadData(LOCAL_FILE, CurrentDateProvider.getCurrentDateFormatted());
+            ModelManager.getInstance().loadData();
+        });
 
-        // Registrazione
-        auth.register("tino", "password123".toCharArray());
+        // Login sincrono come prima
+        FileUserRepository repo = new FileUserRepository("users.txt");
+        AuthenticationService auth = new AuthenticationManager(repo);
+        String user = LoginView.showLogin(auth);
+        if (user == null) { System.out.println("Login fallito"); return; }
+        FavoritesManager.getInstance().setCurrentUser(user);
 
-        // Login
-        boolean ok = auth.login("mario", "password124".toCharArray());
-        System.out.println("Login riuscito? " + ok);
+        // Mostra subito la UI "vuota" e abilitala quando il preload finisce
         SwingUtilities.invokeLater(() -> {
-        
-        	GTFSManager.getInstance().loadData(LOCAL_FILE,CurrentDateProvider.getCurrentDateFormatted());
-        	ModelManager.getInstance().loadData();
-        	
             MainView mainView = new MainView();
             ConnectivityUtil.setInstanceMainView(mainView);
-            MapController mapController = new MapController(mainView);
-            LineController lineController = new LineController(mainView);
-            StopController stopController = new StopController(mainView);
-            BusController busController = new BusController(mainView);
-            GeneralController generalController = new GeneralController(lineController, stopController, busController, mapController);
-            FavoritesController favoritesController = new FavoritesController(mainView);
-            UIEventController uiEventController = new UIEventController(mainView, lineController, stopController, busController, mapController, generalController, favoritesController);
-            uiEventController.CloseSidePanel();
+            mainView.setEnabled(false);
             mainView.setVisible(true);
+
+            preload.whenComplete((ok, ex) -> SwingUtilities.invokeLater(() -> {
+                if (ex != null) {
+                    JOptionPane.showMessageDialog(mainView, "Errore nel caricamento: " + ex.getMessage(),
+                            "Errore", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                MapController mapController = new MapController(mainView);
+                LineController lineController = new LineController(mainView);
+                StopController stopController = new StopController(mainView);
+                BusController busController = new BusController(mainView);
+                GeneralController generalController = new GeneralController(
+                        lineController, stopController, busController, mapController);
+                FavoritesController favoritesController = new FavoritesController(mainView);
+                UIEventController uiEventController = new UIEventController(
+                        mainView, lineController, stopController, busController, mapController, generalController, favoritesController);
+                uiEventController.CloseSidePanel();
+                mainView.setEnabled(true);
+            }));
         });
     }
 }
-
-
-
-//TO DO autenticazione utente
-//TO DO Rileggere la consegna e fare un quadro completo

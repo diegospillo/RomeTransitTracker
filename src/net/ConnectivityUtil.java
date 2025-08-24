@@ -6,13 +6,19 @@ import java.net.URL;
 
 import view.MainView;
 
-/** Utility to check if network is reachable to decide between online and offline mode. */
+/**
+ * Verifica la connettività di rete per passare tra modalità online e offline.
+ */
 public class ConnectivityUtil {
-	private static boolean offlineMode = false;
-	private static MainView mainview;
+        private static boolean offlineMode = false;
+        private static MainView mainview;
 
     private static final String TEST_URL = "https://romamobilita.it";
-    
+
+    /**
+     * Controlla la raggiungibilità della rete e aggiorna l'interfaccia in
+     * modalità offline se necessario.
+     */
     public static void checkConnectivityAndSwitchMode() {
         boolean online = ConnectivityUtil.isOnline();
         if (!online) {
@@ -31,11 +37,21 @@ public class ConnectivityUtil {
             mainview.get_offlinePanel().setVisible(false);
         }
     }
-    
+
+    /**
+     * Imposta l'istanza della view principale su cui riflettere la modalità.
+     *
+     * @param instanceMainview vista principale dell'applicazione
+     */
     public static void setInstanceMainView(MainView instanceMainview) {
-    	mainview = instanceMainview;
+        mainview = instanceMainview;
     }
 
+    /**
+     * Effettua una richiesta HTTP per verificare la raggiungibilità del sito.
+     *
+     * @return {@code true} se la connessione è disponibile
+     */
     private static boolean isOnline() {
         try {
             HttpURLConnection conn = (HttpURLConnection) new URL(TEST_URL).openConnection();
@@ -48,12 +64,20 @@ public class ConnectivityUtil {
             return false;
         }
     }
-    
-    public static boolean isOfflineMode() {
-	    return offlineMode;
-	}
 
-	public static void setOfflineMode(boolean stato) {
-	    offlineMode = stato;
-	}
+    /**
+     * @return {@code true} se l'applicazione è in modalità offline
+     */
+    public static boolean isOfflineMode() {
+            return offlineMode;
+        }
+
+        /**
+         * Imposta manualmente la modalità offline.
+         *
+         * @param stato {@code true} per abilitare l'offline
+         */
+        public static void setOfflineMode(boolean stato) {
+            offlineMode = stato;
+        }
 }

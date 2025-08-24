@@ -6,8 +6,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Simple manager for storing favourite lines and stops.
- * Favourites are persisted to a small local file per user.
+ * Gestisce l'elenco di linee e fermate preferite dell'utente.
+ * <p>
+ * Le informazioni vengono serializzate su un piccolo file locale per ogni
+ * utente, consentendo di mantenere le preferenze tra le sessioni
+ * dell'applicazione Rome Transit Tracker.
  */
 public class FavoritesManager {
     private static final FavoritesManager INSTANCE = new FavoritesManager();
@@ -18,19 +21,38 @@ public class FavoritesManager {
     private final Set<String> favoriteStops = new LinkedHashSet<>();
     private String currentUser;
 
+    /**
+     * Costruttore privato per implementare il pattern Singleton.
+     * Carica eventuali preferenze già salvate sul file system.
+     */
     private FavoritesManager() {
         loadFavorites();
     }
 
+    /**
+     * Imposta l'utente corrente e carica le relative preferenze dal disco.
+     *
+     * @param username nome dell'utente loggato
+     */
     public synchronized void setCurrentUser(String username) {
         this.currentUser = username;
         loadFavorites();
     }
 
+    /**
+     * Restituisce l'istanza unica del manager.
+     *
+     * @return singleton di {@code FavoritesManager}
+     */
     public static FavoritesManager getInstance() {
         return INSTANCE;
     }
 
+    /**
+     * Aggiunge una linea alle preferite e persiste la modifica su disco.
+     *
+     * @param lineId identificativo della linea
+     */
     public void addLine(String lineId) {
         if (lineId != null && !lineId.isEmpty()) {
             favoriteLines.add(lineId);
@@ -38,6 +60,12 @@ public class FavoritesManager {
         }
     }
 
+    /**
+     * Aggiunge una fermata alle preferite e aggiorna il file di
+     * persistenza.
+     *
+     * @param stopId identificativo della fermata
+     */
     public void addStop(String stopId) {
         if (stopId != null && !stopId.isEmpty()) {
             favoriteStops.add(stopId);
@@ -45,7 +73,12 @@ public class FavoritesManager {
         }
     }
 
-    /** Remove a line from favourites (if present) and persist to file. */
+    /**
+     * Rimuove una linea dalle preferite (se presente) e salva il nuovo
+     * stato sul file.
+     *
+     * @param lineId identificativo della linea da rimuovere
+     */
     public void removeLine(String lineId) {
         if (lineId != null && !lineId.isEmpty()) {
             boolean changed = favoriteLines.remove(lineId);
@@ -55,7 +88,12 @@ public class FavoritesManager {
         }
     }
 
-    /** Remove a stop from favourites (if present) and persist to file. */
+    /**
+     * Rimuove una fermata dalle preferite (se presente) e aggiorna il
+     * file di persistenza.
+     *
+     * @param stopId identificativo della fermata da rimuovere
+     */
     public void removeStop(String stopId) {
         if (stopId != null && !stopId.isEmpty()) {
             boolean changed = favoriteStops.remove(stopId);
@@ -65,14 +103,28 @@ public class FavoritesManager {
         }
     }
 
+    /**
+     * Restituisce l'elenco delle linee preferite dell'utente corrente.
+     *
+     * @return insieme immutabile degli ID delle linee preferite
+     */
     public Set<String> getFavoriteLines() {
         return new LinkedHashSet<>(favoriteLines);
     }
 
+    /**
+     * Restituisce l'elenco delle fermate preferite dell'utente corrente.
+     *
+     * @return insieme immutabile degli ID delle fermate preferite
+     */
     public Set<String> getFavoriteStops() {
         return new LinkedHashSet<>(favoriteStops);
     }
 
+    /**
+     * Carica da file le preferenze dell'utente corrente, popolando gli
+     * insiemi interni.
+     */
     private void loadFavorites() {
         favoriteLines.clear();
         favoriteStops.clear();
@@ -94,6 +146,9 @@ public class FavoritesManager {
         }
     }
 
+    /**
+     * Scrive su disco lo stato corrente delle preferenze dell'utente.
+     */
     private void saveFavorites() {
         Path path = getFilePath();
         if (path == null) return;
@@ -115,6 +170,13 @@ public class FavoritesManager {
         }
     }
 
+    /**
+     * Costruisce il percorso del file di preferenze relativo all'utente
+     * corrente.
+     *
+     * @return percorso del file oppure {@code null} se nessun utente è
+     *         impostato
+     */
     private Path getFilePath() {
         return (currentUser == null) ? null : DATA_DIR.resolve(FILE_PREFIX + currentUser + ".txt");
     }

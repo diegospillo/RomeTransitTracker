@@ -25,18 +25,26 @@ import auth.AuthenticationService;
 import auth.FileUserRepository;
 
 /**
- * AppLauncher → Entry point grafico dell'app
- * Inizializza:
- * - GTFSStaticService: parsing dei file statici da 'rome_static_gtfs'
- * - MainView: interfaccia utente principale
- * - MapController: imposta la mappa iniziale e le interazioni
- * - LineController: logica per mostrare linee su mappa
- * - StopController: logica per visualizzare orari/fermate
- * - UIEventController: collega pulsanti e eventi della GUI ai controller
+ * Gestisce l'avvio dell'interfaccia grafica dell'applicazione Rome Transit Tracker.
+ * Si occupa di caricare i dati statici GTFS, inizializzare il modello e
+ * predisporre i controller e la vista principale.
  */
 public class AppLauncher {
     private static final String LOCAL_FILE = "rome_static_gtfs";
 
+    /**
+     * Costruttore privato per evitare l'instanziazione della classe di utilità.
+     */
+    private AppLauncher() {
+        // Nascosto
+    }
+
+    /**
+     * Inizializza l'applicazione caricando i dati statici, gestendo il login
+     * utente e predisponendo i controller e la vista principale.
+     *
+     * @param args argomenti della riga di comando
+     */
     public static void launchApp(String[] args) {
         // Parte subito in background
         CompletableFuture<Void> preload = CompletableFuture.runAsync(() -> {

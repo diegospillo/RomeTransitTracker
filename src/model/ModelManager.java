@@ -16,6 +16,10 @@ import service.DataRow;
 import service.GTFSManager;
 import service.GTFSReader;
 
+/**
+ * Gestore centrale del modello dati. Fornisce metodi per caricare e filtrare
+ * informazioni su linee, fermate, viaggi e orari del sistema di trasporto.
+ */
 public class ModelManager {
 	
 	private final static ModelManager modelManager = new ModelManager();
@@ -25,66 +29,93 @@ public class ModelManager {
 	private Map<String,Stop> stops = new HashMap<>();
 	private Map<String,Trip> trips = new HashMap<>();
 	
-	public void loadData() {
-    	SetStops(gtfsManager.getStops());
-    	SetRoutes(gtfsManager.getRoutes());
-    	SetTrips(gtfsManager.getTrips(),gtfsManager.getFilterService_idByDate());
-    	GTFSReader.setStop_times(modelManager);
+        /**
+         * Carica i dati GTFS nelle strutture interne.
+         */
+        public void loadData() {
+        SetStops(gtfsManager.getStops());
+        SetRoutes(gtfsManager.getRoutes());
+        SetTrips(gtfsManager.getTrips(),gtfsManager.getFilterService_idByDate());
+        GTFSReader.setStop_times(modelManager);
     }
 	
-	private void putRoute(DataRow data) {
-		routes.put(data.get("route_id"), new Route(data));
-	}
-	private void putStop(DataRow data) {
-		stops.put(data.get("stop_id"), new Stop(data));
-	}
-	private void putTrip(DataRow data) {
-		trips.put(data.get("trip_id"), new Trip(data));
-	}
+        /** Inserisce una nuova linea. */
+        private void putRoute(DataRow data) {
+                routes.put(data.get("route_id"), new Route(data));
+        }
+        /** Inserisce una nuova fermata. */
+        private void putStop(DataRow data) {
+                stops.put(data.get("stop_id"), new Stop(data));
+        }
+        /** Inserisce un nuovo viaggio. */
+        private void putTrip(DataRow data) {
+                trips.put(data.get("trip_id"), new Trip(data));
+        }
 	
 	// Setter
-	public void SetStops(DataGTFS data){
+        /**
+         * Popola le fermate dal dataset specificato.
+         */
+        public void SetStops(DataGTFS data){
         for (DataRow row : data.dataList()) {
-        	putStop(row);
+                putStop(row);
         }
     }
 
+    /**
+     * Popola le linee dal dataset specificato.
+     */
     public void SetRoutes(DataGTFS data){
         for (DataRow row : data.dataList()) {
-        	putRoute(row);
+                putRoute(row);
         }
     }
-    
+
+    /**
+     * Popola i viaggi filtrando per service_id valido.
+     *
+     * @param data dataset dei trip
+     * @param service_id identificativi di servizio
+     */
     public void SetTrips(DataGTFS data,Set<String> service_id){
         for (DataRow row : data.dataList()) {
             if(service_id.contains(row.get("service_id"))) {
-            	putTrip(row);
+                putTrip(row);
             }
         }
     }
     
     // Getter
+    /** Restituisce tutte le linee caricate. */
     public Map<String,Route> getRoutes(){
-    	return routes;
+        return routes;
     }
+    /** Restituisce tutte le fermate caricate. */
     public Map<String,Stop> getStops(){
-    	return stops;
+        return stops;
     }
+    /** Restituisce tutti i viaggi caricati. */
     public Map<String,Trip> getTrips(){
-    	return trips;
+        return trips;
     }
     
     // Filter
+    /**
+     * Filtra i viaggi per linea e direzione.
+     */
     public Map<String,Trip> getTripsByRouteId(String routeId, Boolean direction){
-    	Map<String,Trip> my_trips = new HashMap<>();
-    	for (Map.Entry<String, Trip> entry: trips.entrySet()) {
-    		if(entry.getValue().getRouteId().equals(routeId) && entry.getValue().getDirection().equals(direction)) {
-    			my_trips.put(entry.getKey(),entry.getValue());
-    		}
-    	}
-    	return my_trips;
+        Map<String,Trip> my_trips = new HashMap<>();
+        for (Map.Entry<String, Trip> entry: trips.entrySet()) {
+                if(entry.getValue().getRouteId().equals(routeId) && entry.getValue().getDirection().equals(direction)) {
+                        my_trips.put(entry.getKey(),entry.getValue());
+                }
+        }
+        return my_trips;
     }
     
+    /**
+     * Restituisce gli shape_id associati a un insieme di viaggi.
+     */
     public List<String> getShapeIdsByTrips(Set<String> localTripIds) {
         List<String> shapeIds = new ArrayList<>();
         for (String tripId : localTripIds) {
@@ -96,14 +127,17 @@ public class ModelManager {
         return shapeIds;
     }
     
+    /**
+     * Filtra i viaggi in base allo {@code shape_id} specificato.
+     */
     public static Map<String, Trip> getTripsByShapeId(Map<String, Trip> trips,String shape_id) {
-    	Map<String,Trip> my_trips = new HashMap<>();
-    	for (Map.Entry<String, Trip> entry: trips.entrySet()) {
-    		if(entry.getValue().getShapeId().equals(shape_id)) {
-    			my_trips.put(entry.getKey(),entry.getValue());
-    		}
-    	}
-    	return my_trips;
+        Map<String,Trip> my_trips = new HashMap<>();
+        for (Map.Entry<String, Trip> entry: trips.entrySet()) {
+                if(entry.getValue().getShapeId().equals(shape_id)) {
+                        my_trips.put(entry.getKey(),entry.getValue());
+                }
+        }
+        return my_trips;
     }
     
     public static Map<String, StopTime> getStopTimeForTrip(Map<String, Trip> trips){

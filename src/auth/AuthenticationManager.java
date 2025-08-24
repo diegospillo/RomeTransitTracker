@@ -1,16 +1,22 @@
 package auth;
 
 /**
- * Basic implementation of {@link AuthenticationService} that stores users in a
- * simple file via {@link FileUserRepository}.
+ * Gestisce l'autenticazione degli utenti dell'applicazione memorizzando
+ * le credenziali tramite un {@link FileUserRepository}.
  */
 public class AuthenticationManager implements AuthenticationService {
     private final FileUserRepository repo;
 
+    /**
+     * Crea un gestore che utilizza il repository specificato.
+     *
+     * @param repo implementazione per la persistenza delle credenziali
+     */
     public AuthenticationManager(FileUserRepository repo) {
         this.repo = repo;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void register(String username, char[] password) {
         if (repo.usernameExists(username)) {
@@ -20,6 +26,7 @@ public class AuthenticationManager implements AuthenticationService {
         repo.createUser(username, hash);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean login(String username, char[] password) {
         var user = repo.findByUsername(username);

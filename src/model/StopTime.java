@@ -3,6 +3,9 @@ package model;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Orario di passaggio di un trip presso una fermata.
+ */
 public class StopTime {
     String trip_id;
     String stop_id;
@@ -10,23 +13,29 @@ public class StopTime {
     long arrivalEpoch;
     int delaySeconds;
     boolean isPassed = false;
-    
+
+    /**
+     * Costruisce un orario programmato partendo da stringhe GTFS.
+     */
     StopTime(String tripId,String stopId,String arrival_time,String stopSequence){
-    	this.trip_id = tripId;
-    	this.stop_id = stopId;
-    	this.stopSequence = Integer.parseInt(stopSequence);
-    	this.arrivalEpoch = parseArrivalTimeToEpoch(arrival_time);
-    	this.delaySeconds = 0;
+        this.trip_id = tripId;
+        this.stop_id = stopId;
+        this.stopSequence = Integer.parseInt(stopSequence);
+        this.arrivalEpoch = parseArrivalTimeToEpoch(arrival_time);
+        this.delaySeconds = 0;
     }
-    
+
+    /**
+     * Costruisce un orario con informazioni in tempo reale.
+     */
     StopTime(String tripId, String stopId,Long arrival_time,int stopSequence, int delay){
-    	this.trip_id = tripId;
-    	this.stop_id = stopId;
-    	this.stopSequence = stopSequence;
-    	this.arrivalEpoch = arrival_time;
-    	this.delaySeconds = delay;
+        this.trip_id = tripId;
+        this.stop_id = stopId;
+        this.stopSequence = stopSequence;
+        this.arrivalEpoch = arrival_time;
+        this.delaySeconds = delay;
     }
-    
+
     private long parseArrivalTimeToEpoch(String arrivalTime) {
         try {
             String[] parts = arrivalTime.split(":");
@@ -53,48 +62,63 @@ public class StopTime {
             return -1;
         }
     }
-    
-   
+
+
+    /** @return trip associato */
     public String getTripId() {
-    	return trip_id;
+        return trip_id;
     }
+    /** @return fermata associata */
     public String getStopId() {
-    	return stop_id;
+        return stop_id;
     }
+    /** @return sequenza della fermata */
     public int getStopSequence() {
-    	return stopSequence;
+        return stopSequence;
     }
+    /** @return orario di arrivo in epoch */
     public long getArrivalEpoch() {
-    	return arrivalEpoch;
+        return arrivalEpoch;
     }
+    /** @return ritardo in secondi */
     public int getDelaySeconds() {
-    	return delaySeconds;
+        return delaySeconds;
     }
+    /** @return {@code true} se l'arrivo è già passato */
     public boolean getIsPassed() {
-    	return isPassed;
+        return isPassed;
     }
+    /**
+     * @return orario di arrivo formattato
+     */
     public String getOrario() {
-    	String orario = Instant.ofEpochSecond(this.arrivalEpoch + this.delaySeconds)
+        String orario = Instant.ofEpochSecond(this.arrivalEpoch + this.delaySeconds)
                 .atZone(ZoneId.of("Europe/Rome"))
                 .toLocalTime()
                 .format(DateTimeFormatter.ofPattern("HH:mm"));
-    	return orario;
+        return orario;
     }
+    /**
+     * @return stringa che indica il ritardo in minuti, se presente
+     */
     public String getDelayMinutes() {
-    	if (this.delaySeconds >= 60) {
-    		return " (+ " + (this.delaySeconds / 60) + " min)";
-    	}
-    	return "";
+        if (this.delaySeconds >= 60) {
+                return " (+ " + (this.delaySeconds / 60) + " min)";
+        }
+        return "";
     }
+    /**
+     * Calcola la previsione di arrivo rispetto all'ora attuale.
+     *
+     * @return stringa descrittiva del tempo rimanente
+     */
     public String getArrivalPrediction() {
-    	long now = Instant.now().getEpochSecond();
+        long now = Instant.now().getEpochSecond();
 
-        // arrivalEpoch è il tempo previsto originario, delaySeconds è il ritardo in secondi
         long adjustedArrival = arrivalEpoch + delaySeconds;
 
-        // calcola la differenza in minuti
         long diffMillis = adjustedArrival - now;
-        long minutes = diffMillis / 60; // 1 minuto = 60.000 ms
+        long minutes = diffMillis / 60;
 
         if (minutes <= 0) {
             return "In arrivo";
@@ -104,31 +128,35 @@ public class StopTime {
             return minutes + " min";
         }
     }
-    
+
+    /**
+     * Crea l'etichetta da mostrare nella vista delle linee.
+     */
     public String getLabelLinea(String stopName,boolean isLive) {
-    	String orario = isLive ? getArrivalPrediction() : getOrario();
+        String orario = isLive ? getArrivalPrediction() : getOrario();
         String label = orario + "/" + stopName;
-        
-        //label += getDelayMinutes();
 
         return label;
     }
-    
+
+    /**
+     * Crea l'etichetta da mostrare nella vista della fermata.
+     */
     public String getLabelFermata(String routeId,String headsign,boolean isLive) {
-    	String orario = isLive ? getArrivalPrediction() : getOrario();
+        String orario = isLive ? getArrivalPrediction() : getOrario();
         String label = routeId + "/" + headsign + " " + orario;
-        //label += getDelayMinutes();
 
         return label;
     }
-    
+
+    /**
+     * Differenza in minuti tra ora corrente e arrivo previsto.
+     */
     public Long getDiffMinutes() {
-    	long now = Instant.now().getEpochSecond();
-    	long adjustedArrival = arrivalEpoch + delaySeconds;
-    	long diffMillis = adjustedArrival - now;
-        long minutes = diffMillis / 60; // 1 minuto = 60.000 ms 
+        long now = Instant.now().getEpochSecond();
+        long adjustedArrival = arrivalEpoch + delaySeconds;
+        long diffMillis = adjustedArrival - now;
+        long minutes = diffMillis / 60;
         return minutes;
     }
-
-
 }

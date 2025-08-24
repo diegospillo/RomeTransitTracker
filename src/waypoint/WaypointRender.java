@@ -7,6 +7,10 @@ import javax.swing.JButton;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.WaypointPainter;
 
+/**
+ * Responsabile del posizionamento grafico dei waypoint sul componente
+ * {@link JXMapViewer}.
+ */
 public class WaypointRender extends WaypointPainter<MyWaypoint> {
 
     @Override

@@ -20,6 +20,11 @@ public class FavoritesController {
     private final FavoritesManager favoritesManager;
     private final ModelManager modelManager;
 
+    /**
+     * Crea il controller associato alla vista principale.
+     *
+     * @param mainView finestra principale su cui visualizzare i preferiti
+     */
     public FavoritesController(MainView mainView) {
         this.mainView = mainView;
         this.favoritesManager = FavoritesManager.getInstance();
@@ -40,6 +45,11 @@ public class FavoritesController {
         }
     }
 
+    /**
+     * Costruisce le etichette da mostrare per le linee preferite.
+     *
+     * @return elenco formattato di linee
+     */
     private List<String> buildLineLabels() {
         Set<String> lines = favoritesManager.getFavoriteLines();
         List<String> labels = new ArrayList<>();
@@ -51,6 +61,11 @@ public class FavoritesController {
         return labels;
     }
 
+    /**
+     * Costruisce le etichette da mostrare per le fermate preferite.
+     *
+     * @return elenco formattato di fermate
+     */
     private List<String> buildStopLabels() {
         Set<String> stops = favoritesManager.getFavoriteStops();
         List<String> labels = new ArrayList<>();

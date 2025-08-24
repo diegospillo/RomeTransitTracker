@@ -12,6 +12,9 @@ import service.FavoritesManager;
 import service.GTFSManager;
 import view.MainView;
 
+/**
+ * Gestisce le operazioni legate alle linee del trasporto pubblico.
+ */
 public class LineController{
 	
 	private final GTFSManager gtfsManager;
@@ -28,6 +31,11 @@ public class LineController{
     private boolean isFavorite = false;
 	
 	
+    /**
+     * Crea il controller associato alla vista principale.
+     *
+     * @param mainView interfaccia grafica principale
+     */
     public LineController(MainView mainView){
         this.gtfsManager = GTFSManager.getInstance();
         this.modelManager = ModelManager.getInstance();
@@ -35,7 +43,12 @@ public class LineController{
         this.allLines = buildAllLines();
     }
 
-	private List<String> buildAllLines(){
+        /**
+         * Recupera l'elenco completo delle linee disponibili.
+         *
+         * @return lista delle linee ordinate alfabeticamente
+         */
+        private List<String> buildAllLines(){
         Set<String> uniqueLines = new HashSet<>();
         for (DataRow row : gtfsManager.getRoutes().dataList()) {
                 String long_name = row.get("route_long_name");
@@ -50,18 +63,35 @@ public class LineController{
         return sortedLines;
 	}
 	
-	public List<String> getAllLines(){
+        /**
+         * Restituisce tutte le linee.
+         *
+         * @return elenco completo delle linee
+         */
+        public List<String> getAllLines(){
         return new ArrayList<>(allLines);
-	}
+        }
 
-	public List<String> getLinesOf(String text){
+        /**
+         * Filtra le linee in base al testo immesso.
+         *
+         * @param text stringa da cercare
+         * @return elenco di linee corrispondenti
+         */
+        public List<String> getLinesOf(String text){
         final String lowered = text.toLowerCase();
         return allLines.stream()
                 .filter(item -> item.toLowerCase().contains(lowered))
                 .collect(Collectors.toList());
-	}
-	
-	public void viewRouteByName(String routeId, Boolean direction) {
+        }
+
+        /**
+         * Carica i dati di una linea specifica e prepara la vista.
+         *
+         * @param routeId   identificatore della linea
+         * @param direction direzione del percorso
+         */
+        public void viewRouteByName(String routeId, Boolean direction) {
 		
 		System.out.println("viewRouteByName: " + routeId + " direction: " + direction);
         this.route_id = routeId;
@@ -75,14 +105,24 @@ public class LineController{
         this.isFavorite = FavoritesManager.getInstance().getFavoriteLines().contains(routeId);
     }
 	
-	public void viewRouteTrip(String tripId) {
+        /**
+         * Visualizza un particolare trip della linea.
+         *
+         * @param tripId identificatore del trip da mostrare
+         */
+        public void viewRouteTrip(String tripId) {
 		Map<String,Trip> curTrips = new HashMap<>();
 		Trip trip = modelManager.getTrips().get(tripId);
 		curTrips.put(tripId, trip);
 		this.trips = new HashMap<>(curTrips);
 	}
 	
-	public void showLinea(boolean isSelectedTrip){
+        /**
+         * Mostra le informazioni della linea nella vista laterale.
+         *
+         * @param isSelectedTrip indica se è stato selezionato un singolo trip
+         */
+        public void showLinea(boolean isSelectedTrip){
 		this.selectedTrip = isSelectedTrip;
 		if(!isSelectedTrip) {
 			mainView.get_lblDettagli().setText("Linea " + route_id);
@@ -106,7 +146,12 @@ public class LineController{
 		mainView.adjustSidePanelWidth();
     }
 	
-	public void setCurrentTrips(Map<String, StopTime> stopTimesByTrips) {
+        /**
+         * Aggiorna i trip correnti applicando un filtro temporale.
+         *
+         * @param stopTimesByTrips mappa degli orari per trip
+         */
+        public void setCurrentTrips(Map<String, StopTime> stopTimesByTrips) {
 		currentTrips = new HashMap<>();
 		long now = Instant.now().getEpochSecond();
 		for(StopTime st : stopTimesByTrips.values()) {
@@ -123,34 +168,62 @@ public class LineController{
         }
 	}
 	
-	public void setIsFavorite(boolean isFavorite) {
-    	this.isFavorite = isFavorite;
+        /**
+         * Imposta se la linea è tra i preferiti.
+         *
+         * @param isFavorite stato di preferito
+         */
+        public void setIsFavorite(boolean isFavorite) {
+        this.isFavorite = isFavorite;
     }
 	
-	public boolean get_direction() {
-		return direction;
-	}
-	
-	public String get_route_id() {
-		return route_id;
-	}
-	
-	public String get_shape_id() {
-		return shape_id;
-	}
-	
-	public String get_nome_linea() {
-		return nome_linea;
-	}
-	
-	public Map<String,Trip> get_trips() {
-		return trips;
-	}
-	public boolean getSelectedTrip() {
-		return selectedTrip;
-	}
-	public Map<String,StopTime> getCurrentTrips(){
-		return this.currentTrips;
-	}
+        /**
+         * @return direzione corrente della linea
+         */
+        public boolean get_direction() {
+                return direction;
+        }
+
+        /**
+         * @return identificatore della linea
+         */
+        public String get_route_id() {
+                return route_id;
+        }
+
+        /**
+         * @return shape id corrente
+         */
+        public String get_shape_id() {
+                return shape_id;
+        }
+
+        /**
+         * @return nome della linea
+         */
+        public String get_nome_linea() {
+                return nome_linea;
+        }
+
+        /**
+         * @return mappa dei trip caricati
+         */
+        public Map<String,Trip> get_trips() {
+                return trips;
+        }
+
+        /**
+         * @return {@code true} se è stato selezionato un trip specifico
+         */
+        public boolean getSelectedTrip() {
+                return selectedTrip;
+        }
+
+        /**
+         * @return mappa dei trip correnti filtrati
+         */
+        public Map<String,StopTime> getCurrentTrips(){
+                return this.currentTrips;
+        }
 	
 }

@@ -23,6 +23,11 @@ import view.MainView;
 import waypoint.EventWaypoint;
 import waypoint.MyWaypoint;
 
+/**
+ * Controller responsabile della gestione degli eventi dell'interfaccia
+ * grafica. Collega i componenti della vista con i vari controller applicativi
+ * e gestisce interazioni come click, ricerca e gestione dei preferiti.
+ */
 public class UIEventController {
     private final MainView mainView;
     private final LineController lineController;
@@ -36,6 +41,18 @@ public class UIEventController {
     private Timer timer = new Timer();
     private final int DELAY = 300; // ms di attesa dopo l'ultima digitazione
 
+    /**
+     * Inizializza il controller degli eventi UI collegando la vista ai vari
+     * controller di dominio.
+     *
+     * @param mainView vista principale
+     * @param lineController controller delle linee
+     * @param stopController controller delle fermate
+     * @param busController controller dei bus
+     * @param mapController controller della mappa
+     * @param generalController controller generale
+     * @param favoritesController controller dei preferiti
+     */
     public UIEventController(MainView mainView,
                              LineController lineController,
                              StopController stopController,
@@ -53,7 +70,10 @@ public class UIEventController {
         setupEventHandlers();
         updateSearchList("");
     }
-   
+
+    /**
+     * Configura gli handler degli eventi dell'interfaccia grafica.
+     */
     private void setupEventHandlers() {
 
         // Aggiungere un listener per il doppio click su una fermata
@@ -230,12 +250,20 @@ public class UIEventController {
         mainView.set_event(getEvent());
     }
     
+    /**
+     * Chiude il pannello laterale e ferma gli aggiornamenti correnti.
+     */
     public void CloseSidePanel() {
-    	generalController.Close();
-    	controlSidePanel();
-    	mainView.get_toggleSidePanelBtn().setVisible(false);
+        generalController.Close();
+        controlSidePanel();
+        mainView.get_toggleSidePanelBtn().setVisible(false);
     }
     
+    /**
+     * Crea il listener per la selezione dei waypoint sulla mappa.
+     *
+     * @return implementazione di {@link EventWaypoint}
+     */
     private EventWaypoint getEvent() {
         return new EventWaypoint() {
             @Override
@@ -257,7 +285,10 @@ public class UIEventController {
         };
     }
     
-    private void SearchActionPerformed() {//GEN-FIRST:event_cmdAddActionPerformed
+    /**
+     * Esegue la ricerca in base al testo inserito dall'utente.
+     */
+    private void SearchActionPerformed() {
     	String text = mainView.getSearchText(); 
     	int value = generalController.getStateControl();
     	if(value == 0) {
@@ -268,7 +299,6 @@ public class UIEventController {
     		String stop_id = extractId(text);
     		generalController.visualizzaFermata(stop_id);
     	}
-    	//mainView.get_modelSearch().clear();
         mainView.setSearchText("");
         updateSearchList("");
     	mainView.get_toggleSidePanelBtn().setVisible(true);
@@ -276,20 +306,34 @@ public class UIEventController {
         mainView.get_toggleSidePanelBtn().setIcon(mainView.get_leftIcon());
     }
     
+    /**
+     * Inverte la direzione della linea corrente.
+     */
     private void swapeDirection() {
         boolean direzione = !lineController.get_direction();
         generalController.visualizzaLinea(lineController.get_route_id(), direzione);
     }
     
+    /**
+     * Aggiorna la linea visualizzata mantenendo la direzione corrente.
+     */
     private void getNextArrivals() {
-    	generalController.visualizzaLinea(lineController.get_route_id(), lineController.get_direction());
+        generalController.visualizzaLinea(lineController.get_route_id(), lineController.get_direction());
     }
     
-    private void selectMoreInfo(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdAddActionPerformed
+    /**
+     * Mostra maggiori dettagli sulla fermata selezionata.
+     *
+     * @param evt evento dell'interfaccia
+     */
+    private void selectMoreInfo(java.awt.event.ActionEvent evt) {
         String stopId = stopController.get_stopId();
         generalController.visualizzaFermata(stopId);
     }
-    
+
+    /**
+     * Aggiunge la fermata o la linea corrente ai preferiti.
+     */
     private void addFavorite() {
         String stopId = stopController.get_stopId();
         String lineId = lineController.get_route_id();
@@ -305,7 +349,10 @@ public class UIEventController {
         }
         JOptionPane.showMessageDialog(mainView, "Aggiunto ai preferiti");
     }
-    
+
+    /**
+     * Rimuove la fermata o la linea corrente dai preferiti.
+     */
     private void deleteFavorite() {
         String stopId = stopController.get_stopId();
         String lineId = lineController.get_route_id();
@@ -320,7 +367,10 @@ public class UIEventController {
             lineController.showLinea(lineController.getSelectedTrip());
         }
     }
-    
+
+    /**
+     * Visualizza la lista dei preferiti dell'utente.
+     */
     private void showFavorites() {
     	generalController.Close();
         boolean showLines = mainView.get_comboFavorites().getSelectedIndex() == 0;
@@ -346,23 +396,36 @@ public class UIEventController {
         mainView.adjustSidePanelWidth();
     }
     
+    /**
+     * Alterna la visibilità del pannello laterale.
+     */
     private void controlSidePanel() {
-    	boolean visible = mainView.get_sidePanel().isVisible();
+        boolean visible = mainView.get_sidePanel().isVisible();
         mainView.get_sidePanel().setVisible(!visible);
         mainView.get_toggleSidePanelBtn().setIcon(visible ? mainView.get_rightIcon() : mainView.get_leftIcon());
         mainView.revalidate();
         mainView.repaint();
     }
     
+    /**
+     * Cambia il tipo di ricerca tra linee e fermate.
+     *
+     * @param evt evento di selezione
+     */
     private void comboSearchControlActionPerformed(java.awt.event.ActionEvent evt) {
         int selected = mainView.get_comboSearchControl().getSelectedIndex();
         generalController.setStateControl(selected);
-       
+
         mainView.get_modelSearch().clear();
         mainView.setSearchText("");
         updateSearchList("");
     }
     
+    /**
+     * Aggiorna in modo asincrono la lista dei suggerimenti di ricerca.
+     *
+     * @param text testo attualmente digitato
+     */
     private void updateSearchList(String text) {
     	SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
             @Override
@@ -408,22 +471,27 @@ public class UIEventController {
         worker.execute();
     }
     
+    /**
+     * Esegue il logout dell'utente e riavvia l'applicazione.
+     */
     public void Logout() {
-    	// 1) chiudi UI corrente sull'EDT
         SwingUtilities.invokeLater(() -> {
             for (Window w : Window.getWindows()) {
                 w.dispose();
             }
 
-            // 2) pulisci lo stato di sessione
             FavoritesManager.getInstance().setCurrentUser(null);
 
-
-            // 3) rilancia AppLauncher su un nuovo thread (NON sull'EDT)
             new Thread(() -> AppLauncher.launchApp(new String[0]), "AppRelauncher").start();
         });
     }
-    
+
+    /**
+     * Estrae un identificativo racchiuso tra parentesi da una stringa.
+     *
+     * @param itemString stringa contenente l'identificativo
+     * @return valore dell'identificativo oppure stringa vuota
+     */
     public static String extractId(String itemString) {
         Pattern pattern = Pattern.compile("\\(([^)]+)\\)");
         Matcher matcher = pattern.matcher(itemString);

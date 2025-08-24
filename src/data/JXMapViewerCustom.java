@@ -20,18 +20,32 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.*;
 
+/**
+ * Estensione personalizzata di {@link JXMapViewer} con supporto ai waypoint e
+ * al disegno dei percorsi delle linee del trasporto pubblico.
+ */
 public class JXMapViewerCustom extends JXMapViewer {
 
 	private WaypointPainter<MyWaypoint> stopPainter;
     private WaypointPainter<MyWaypoint> busPainter;
     private WaypointPainter<MyWaypoint> pingPainter;
     
+    /**
+     * Imposta il painter per le fermate sulla mappa.
+     *
+     * @param stopWaypoints insieme di waypoint delle fermate
+     */
     public void setStopPainter(Set<MyWaypoint> stopWaypoints) {
         stopPainter = new WaypointRender();
         stopPainter.setWaypoints(stopWaypoints);
         updatePainters();
     }
 
+    /**
+     * Imposta il painter per i bus sulla mappa.
+     *
+     * @param busWaypoints waypoint dei bus
+     */
     public void setBusPainter(Set<MyWaypoint> busWaypoints) {
         if (busPainter == null) {
             busPainter = new WaypointRender();
@@ -40,14 +54,22 @@ public class JXMapViewerCustom extends JXMapViewer {
         updatePainters();
     }
     
+    /**
+     * Imposta il painter per i waypoint di ping.
+     *
+     * @param pingWaypoints waypoint da evidenziare
+     */
     public void setPingPainter(Set<MyWaypoint> pingWaypoints) {
         if (pingPainter == null) {
-        	pingPainter = new WaypointRender();
+                pingPainter = new WaypointRender();
         }
         pingPainter.setWaypoints(pingWaypoints);
         updatePainters();
     }
 
+    /**
+     * Ricompone e applica il painter delle sovrapposizioni.
+     */
     private void updatePainters() {
         List<Painter<JXMapViewer>> painters = new ArrayList<>();
         if (stopPainter != null) painters.add(stopPainter);
@@ -58,21 +80,35 @@ public class JXMapViewerCustom extends JXMapViewer {
         repaint();
     }
     
+    /**
+     * Restituisce i dati del percorso attualmente disegnato.
+     *
+     * @return oggetto {@link DataGTFS} del percorso
+     */
     public DataGTFS getRoutingData() {
         return routingData;
     }
 
+    /**
+     * Definisce i dati e il colore del percorso da visualizzare.
+     *
+     * @param routingData dati del percorso
+     * @param colorRouteType colore associato al tipo di linea
+     */
     public void setRoutingData(DataGTFS routingData,Color colorRouteType) {
         this.routingData = routingData;
         this.colorRouteType = colorRouteType;
         repaint();
     }
     
+    /**
+     * Elimina il percorso corrente dalla mappa.
+     */
     public void clearRoutingData() {
-    	if(this.routingData!=null) {
-    		this.routingData.clear();
-    		repaint();
-    	}
+        if(this.routingData!=null) {
+                this.routingData.clear();
+                repaint();
+        }
     }
 
     private DataGTFS routingData;
@@ -100,6 +136,13 @@ public class JXMapViewerCustom extends JXMapViewer {
     private boolean first = true;
     private Point2D prevPoint;
 
+    /**
+     * Disegna un segmento del percorso sul painter.
+     *
+     * @param p2 percorso da popolare
+     * @param d  riga dei dati GTFS
+     * @param g2 contesto grafico
+     */
     private void draw(Path2D p2, DataRow d, Graphics2D g2) {
         Point2D point = convertGeoPositionToPoint(new GeoPosition(Double.parseDouble(d.get("shape_pt_lat")),Double.parseDouble(d.get("shape_pt_lon"))));
         if (first) {
@@ -115,18 +158,19 @@ public class JXMapViewerCustom extends JXMapViewer {
         }
     }
 
+    /**
+     * Disegna una freccia direzionale fra due punti del percorso.
+     */
     private void drawArrow(Graphics2D g2, Point2D from, Point2D to) {
         double angle = Math.atan2(to.getY() - from.getY(), to.getX() - from.getX());
-        int arrowSize = 10; // Dimensione della freccia
+        int arrowSize = 10;
         int arrowWidth = 6;
-        double arrowAngle = Math.PI / (6 - (arrowWidth / 10.0)); // Usa arrowWidth per regolare l'angolo
+        double arrowAngle = Math.PI / (6 - (arrowWidth / 10.0));
 
-        // Calcola i punti della freccia
         double x1 = to.getX() - arrowSize * Math.cos(angle - arrowAngle);
         double y1 = to.getY() - arrowSize * Math.sin(angle - arrowAngle);
         double x2 = to.getX() - arrowSize * Math.cos(angle + arrowAngle);
         double y2 = to.getY() - arrowSize * Math.sin(angle + arrowAngle);
-
 
         Path2D arrow = new Path2D.Double();
         arrow.moveTo(to.getX(), to.getY());
@@ -135,7 +179,7 @@ public class JXMapViewerCustom extends JXMapViewer {
         arrow.lineTo(x2, y2);
 
         g2.setStroke(new BasicStroke(2f));
-        g2.setColor(Color.BLACK); // Colore delle frecce
+        g2.setColor(Color.BLACK);
         g2.draw(arrow);
     }
 }

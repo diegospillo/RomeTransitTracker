@@ -16,15 +16,9 @@ import service.FavoritesManager;
 import view.LoginView;
 import view.MainView;
 
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.*;
 
 import auth.AuthenticationManager;
 import auth.AuthenticationService;
@@ -72,7 +66,7 @@ public class AppLauncher {
             mainView.setEnabled(false);
             mainView.setVisible(true);
 
-            preload.whenComplete((ok, ex) -> SwingUtilities.invokeLater(() -> {
+            preload.whenComplete((_, ex) -> SwingUtilities.invokeLater(() -> {
                 if (ex != null) {
                     JOptionPane.showMessageDialog(mainView, "Errore nel caricamento: " + ex.getMessage(),
                             "Errore", JOptionPane.ERROR_MESSAGE);

@@ -1,5 +1,8 @@
 # Rome Transit Tracker (Damose)
 
+<center><img src="./docs/images/linea.png" width=500/></center>
+<center><img src="./docs/images/fermata.png" width=500/></center>
+
 #### Student Name: Diego Albani
 
 #### Date: 17/09/2025
